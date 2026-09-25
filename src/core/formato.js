@@ -22,6 +22,10 @@ export function indiceMese(iso) {
 export function nomeMese(mese) {
   return MESI[indiceMese(mese)] + ' ' + mese.slice(0, 4);
 }
+/* 'Set 2026' (barra in alto) */
+export function nomeMeseBreve(mese) {
+  return MESI[indiceMese(mese)].slice(0, 3) + ' ' + mese.slice(0, 4);
+}
 /* nome del mese dentro una frase: 'agosto', oppure 'dicembre 2025' se l'anno è diverso da quello di riferimento */
 export function meseInFrase(mese, riferimento) {
   const m = MESI[indiceMese(mese)].toLowerCase();

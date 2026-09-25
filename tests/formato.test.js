@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  isoData, chiaveMese, nomeMese, giorniNelMese, spostaChiaveMese, dataBreve, etichettaData,
+  isoData, chiaveMese, nomeMese, nomeMeseBreve, giorniNelMese, spostaChiaveMese, dataBreve, etichettaData,
   eur, eurEsatto, eurSegno, percentuale, parseImporto, esc, sigla, ieriISO, orarioBreve, quando, meseInFrase
 } from '../src/core/formato.js';
 
@@ -12,6 +12,8 @@ test('date ISO e chiavi mese', () => {
   assert.equal(isoData(new Date(2026, 0, 5)), '2026-01-05');
   assert.equal(chiaveMese('2026', 8), '2026-09');
   assert.equal(nomeMese('2026-09'), 'Settembre 2026');
+  assert.equal(nomeMeseBreve('2026-09'), 'Set 2026');
+  assert.equal(nomeMeseBreve('2025-12'), 'Dic 2025');
   assert.equal(giorniNelMese('2026-02'), 28);
   assert.equal(giorniNelMese('2028-02'), 29);
   assert.equal(dataBreve('2026-09-18'), '18 set');

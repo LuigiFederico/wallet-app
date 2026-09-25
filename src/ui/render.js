@@ -1,7 +1,7 @@
 /* Disegna la vista del tab corrente, gli sheet aperti e l'indicatore di salvataggio. */
 
 import { S } from '../state.js';
-import { nomeMese, orarioBreve } from '../core/formato.js';
+import { nomeMeseBreve, orarioBreve } from '../core/formato.js';
 import { vistaCasa } from './viste/casa.js';
 import { vistaStorico } from './viste/storico.js';
 import { vistaStats } from './viste/stats.js';
@@ -25,7 +25,7 @@ export function aggiornaStatoSalvataggio() {
 }
 
 export function render() {
-  document.getElementById('meseLabel').textContent = nomeMese(S.mese);
+  document.getElementById('meseLabel').textContent = nomeMeseBreve(S.mese);
   document.querySelectorAll('.tab').forEach((t) => { t.dataset.on = t.dataset.tab === S.tab ? 1 : 0; });
   const main = document.getElementById('scroll');
   const y = main.scrollTop;
