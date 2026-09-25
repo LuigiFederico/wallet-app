@@ -24,8 +24,11 @@ export const S = {
   scrivo: false,
 
   // sheet aperti
-  bozza: null,            // form "aggiungi"
+  bozza: null,            // form "aggiungi" / "modifica" (con id)
   dettaglio: null,        // movimento selezionato
+  conflitto: null,        // file e telefono diversi: quale versione tenere
+
+  bannerNascosto: false,  // Casa: "collega una cartella" chiuso con "Più tardi"
 
   annullaSnapshot: null
 };

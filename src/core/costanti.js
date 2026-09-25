@@ -3,6 +3,7 @@ export const SIGLE = ['GEN','FEB','MAR','APR','MAG','GIU','LUG','AGO','SET','OTT
 
 export const FILENAME = 'wallet-data.json';
 export const LS_KEY = 'butterflies-wallet-data';
+export const LS_BANNER = 'butterflies-banner-cartella'; // '1' = banner "collega una cartella" chiuso
 
 export const DA_RIMBORSARE = 'Da rimborsare';
 export const INVESTIMENTI = 'Investimenti';
@@ -14,6 +15,7 @@ export const ESCLUDIBILI = [BUONI_PASTO, DA_RIMBORSARE, INVESTIMENTI];
 export const FILTRI_STORICO = ['Tutti', 'Uscite', 'Entrate', DA_RIMBORSARE, INVESTIMENTI];
 
 export const COLORE_DEFAULT = '#8A8178';
+export const COLORE_FUORI = '#DDD5C7'; // fette delle categorie escluse dal portafoglio
 
 export const CAT_USCITE = [
   ['Spesa settimanale','#7A8B3F'], ['Affitto','#4A5C8C'], ['Bollette','#3E8391'],

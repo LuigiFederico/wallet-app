@@ -48,16 +48,46 @@ export function riepilogo(dati, movs) {
   const ordinate = Object.keys(catTot)
     .map((n) => ({ nome: n, val: catTot[n], colore: colore(dati, n, 'uscita') }))
     .sort((a, b) => b.val - a.val);
-  return { movs, entrate, uscite, rimasto: entrate - uscite, catTot, tot, ordinate };
+  // portafoglio: le categorie che contano in "uscite"; fuori: quelle escluse
+  const ex = escluse(dati, 'uscita');
+  const portafoglio = ordinate.filter((c) => ex.indexOf(c.nome) < 0);
+  const fuori = ordinate.filter((c) => ex.indexOf(c.nome) >= 0);
+  return { movs, entrate, uscite, rimasto: entrate - uscite, catTot, tot, ordinate, portafoglio, fuori };
 }
 
 export function daRimborsare(movs) {
   return movs.filter((m) => m.tipo === 'uscita' && inAttesaDiRimborso(m)).reduce((s, m) => s + m.importo, 0);
 }
 
-/* Una riga per ogni categoria di uscita: speso, budget del mese, differenza, barra. */
-export function righeBudget(dati, mese, catTot) {
-  const bm = dati.budget[mese] || {};
+/* Budget di un periodo: 'AAAA-MM' è il mese, 'AAAA' la somma dei mesi di quell'anno. */
+export function budgetDi(dati, periodo) {
+  if (periodo.length === 7) return dati.budget[periodo] || {};
+  const somma = {};
+  Object.keys(dati.budget).filter((k) => k.slice(0, 4) === periodo).forEach((k) => {
+    Object.entries(dati.budget[k]).forEach(([nome, v]) => { somma[nome] = (somma[nome] || 0) + v; });
+  });
+  return somma;
+}
+
+/* Ultimo mese prima di `mese` con almeno un budget impostato, oppure null. */
+export function meseBudgetPrecedente(dati, mese) {
+  const k = Object.keys(dati.budget)
+    .filter((m) => m < mese && Object.values(dati.budget[m]).some((v) => v > 0))
+    .sort();
+  return k.length ? k[k.length - 1] : null;
+}
+
+/* Quante categorie hanno un budget e quanto fanno in tutto. */
+export function totaleBudget(bm) {
+  const valori = Object.values(bm).filter((v) => v > 0);
+  return { categorie: valori.length, totale: valori.reduce((a, b) => a + b, 0) };
+}
+
+/* Una riga per ogni categoria di uscita: speso, budget del periodo, differenza, barra. */
+export function righeBudget(dati, periodo, catTot) {
+  return righeConBudget(dati, budgetDi(dati, periodo), catTot);
+}
+export function righeConBudget(dati, bm, catTot) {
   return dati.categorie.uscite.map((c) => {
     const speso = catTot[c.nome] || 0, bud = bm[c.nome] || 0, diff = bud - speso;
     return {

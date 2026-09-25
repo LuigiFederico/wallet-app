@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { datiVuoti } from '../src/core/dati.js';
 import {
-  colore, escluse, delMese, dellAnno, totale, uscitePerCategoria, riepilogo, daRimborsare, righeBudget
+  colore, escluse, delMese, dellAnno, totale, uscitePerCategoria, riepilogo, daRimborsare, righeBudget,
+  budgetDi, meseBudgetPrecedente, totaleBudget
 } from '../src/core/calcoli.js';
 
 const mv = (tipo, data, importo, categoria, extra) => ({ id: data + categoria, tipo, data, importo, categoria, ...extra });
@@ -62,6 +63,15 @@ test('riepilogo del mese', () => {
   assert.equal(r.ordinate[0].colore, '#4A5C8C');
 });
 
+test('riepilogo separa le categorie del portafoglio da quelle escluse', () => {
+  const d = esempio();
+  const r = riepilogo(d, delMese(d.movimenti, '2026-09'));
+  assert.deepEqual(r.portafoglio.map((c) => c.nome), ['Affitto', 'Spesa settimanale']);
+  assert.deepEqual(r.fuori.map((c) => c.nome), ['Da rimborsare']);
+  // il centro della ciambella (uscite) è la somma della legenda del portafoglio
+  assert.equal(r.portafoglio.reduce((s, c) => s + c.val, 0), r.uscite);
+});
+
 test('daRimborsare conta solo le uscite non ancora rimborsate', () => {
   const d = esempio();
   assert.equal(daRimborsare(d.movimenti), 40);
@@ -82,4 +92,29 @@ test('righeBudget: barra piena e rossa quando si sfora', () => {
   const rimb = righe.find((b) => b.nome === 'Da rimborsare');
   assert.equal(rimb.w, '100.0%'); // speso senza budget
   assert.equal(righe.find((b) => b.nome === 'Viaggi').w, '0.0%');
+});
+
+test('budgetDi: il mese così com\'è, l\'anno come somma dei mesi', () => {
+  const d = esempio();
+  d.budget['2026-08'] = { Affitto: 500, Svago: 50 };
+  d.budget['2025-12'] = { Affitto: 999 };
+  assert.deepEqual(budgetDi(d, '2026-09'), { Affitto: 500, 'Spesa settimanale': 200 });
+  assert.deepEqual(budgetDi(d, '2026-10'), {});
+  assert.deepEqual(budgetDi(d, '2026'), { Affitto: 1000, 'Spesa settimanale': 200, Svago: 50 });
+  const anno = righeBudget(d, '2026', { Affitto: 1599 });
+  assert.equal(anno.find((b) => b.nome === 'Affitto').diff, -599);
+});
+
+test('meseBudgetPrecedente salta i mesi vuoti e ignora quelli dopo', () => {
+  const d = esempio();
+  d.budget['2026-07'] = { Affitto: 500 };
+  d.budget['2026-08'] = { Affitto: 0 };
+  assert.equal(meseBudgetPrecedente(d, '2026-10'), '2026-09');
+  assert.equal(meseBudgetPrecedente(d, '2026-09'), '2026-07');
+  assert.equal(meseBudgetPrecedente(d, '2026-07'), null);
+});
+
+test('totaleBudget conta solo le categorie con un importo', () => {
+  assert.deepEqual(totaleBudget({ Affitto: 620, Svago: 0, Bollette: 150 }), { categorie: 2, totale: 770 });
+  assert.deepEqual(totaleBudget({}), { categorie: 0, totale: 0 });
 });

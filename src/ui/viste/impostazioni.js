@@ -1,16 +1,17 @@
 /* Impostazioni: file collegato ed export, esclusioni dal portafoglio, budget del mese. */
 
 import { S } from '../../state.js';
-import { esc, nomeMese } from '../../core/formato.js';
+import { esc, eur, nomeMese, quando, meseInFrase } from '../../core/formato.js';
 import { FILENAME, ESCLUDIBILI } from '../../core/costanti.js';
-import { delMese, escluse, uscitePerCategoria, righeBudget } from '../../core/calcoli.js';
+import { delMese, escluse, uscitePerCategoria, righeBudget, budgetDi, totaleBudget, meseBudgetPrecedente } from '../../core/calcoli.js';
 import { supportaFS } from '../../storage/file.js';
 
 const ICONA_FILE = '<svg width="17" height="20" viewBox="0 0 18 22" fill="none"><path d="M2 1.8h9l5 5v13.4a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2.8a1 1 0 0 1 1-1Z" stroke="#5B4BC4" stroke-width="1.6"/><path d="M11 1.8V7h5" stroke="#5B4BC4" stroke-width="1.6"/></svg>';
 
 function avvisoFile(collegato) {
   if (collegato && !S.permessoCartella) {
-    return '<div class="avviso avviso--attenzione">Al prossimo salvataggio il browser chiederà di nuovo il permesso su questa cartella: scegli «Consenti a ogni visita» per non doverlo più rifare.</div>';
+    return '<div class="avviso avviso--attenzione">Chrome ha sospeso l\'accesso alla cartella. Le modifiche sono al sicuro su questo telefono e le scrivo nel file appena riattivi'
+      + ' (altrimenti il browser lo chiede al prossimo salvataggio). Scegli «Consenti a ogni visita» per non doverlo più rifare.</div>';
   }
   if (collegato) {
     return '<div class="avviso avviso--ok"><i></i><div>Salvataggio automatico attivo — ogni modifica riscrive il file.</div></div>';
@@ -20,6 +21,21 @@ function avvisoFile(collegato) {
     : 'Questo browser non può scrivere direttamente su file. Usa Chrome su Android, oppure esporta a mano con i pulsanti qui sotto.') + '</div>';
 }
 
+function statoFile() {
+  if (!S.permessoCartella) return 'accesso da riattivare';
+  if (S.salvato.startsWith('errore')) return 'errore di scrittura';
+  return 'ultimo salvataggio ' + quando(S.dati.aggiornato);
+}
+
+function pulsantiCartella(collegato) {
+  if (!supportaFS) return '';
+  if (collegato && !S.permessoCartella) {
+    return '<button id="riattiva" class="cta cta--accento">Riattiva l\'accesso a ' + esc(S.dirHandle.name) + '</button>'
+      + '<button id="pickDir" class="link-btn link-btn--centro">Scegli un\'altra cartella</button>';
+  }
+  return '<button id="pickDir" class="cta">' + (collegato ? 'Cambia cartella' : 'Scegli la cartella') + '</button>';
+}
+
 function sezioneFile() {
   const collegato = !!S.dirHandle;
   return '<div class="sect sect--primo">Il tuo file</div>'
@@ -27,10 +43,10 @@ function sezioneFile() {
     + '<div class="file-testa">'
     + '<div class="file-icona">' + ICONA_FILE + '</div>'
     + '<div class="file-testo"><div class="file-nome">' + FILENAME + '</div>'
-    + '<div class="ell file-info">' + (collegato ? 'in ' + esc(S.dirHandle.name) + ' · salvato ' + esc(S.salvato) : 'nessuna cartella collegata') + '</div></div></div>'
+    + '<div class="ell file-info">' + (collegato ? 'in ' + esc(S.dirHandle.name) + ' · ' + statoFile() : 'nessuna cartella collegata') + '</div></div></div>'
     + avvisoFile(collegato)
-    + (supportaFS ? '<button id="pickDir" class="cta">' + (collegato ? 'Cambia cartella' : 'Scegli la cartella') + '</button>' : '')
-    + '<div class="export-riga">'
+    + pulsantiCartella(collegato)
+    + '<div class="export-riga"><span class="export-lbl">Esporta</span>'
     + '<button id="expJson" class="btn-tenue">.json</button>'
     + '<button id="expCsv" class="btn-tenue">.csv</button>'
     + '<button id="expXlsx" class="btn-tenue">.xlsx</button>'
@@ -39,22 +55,34 @@ function sezioneFile() {
     + '</div>';
 }
 
+/* interruttore acceso = la categoria conta nel totale (cioè non è esclusa) */
 function sezioneEsclusioni() {
-  return '<div class="sect">Totale portafoglio</div>'
+  return '<div class="sect">Conta nel totale portafoglio</div>'
     + '<div class="card lista">'
-    + '<div class="lista-nota">Categorie escluse dal calcolo, come nel foglio Excel.</div>'
+    + '<div class="lista-nota">Le categorie spente non entrano in Rimasto e Risparmio. Nei grafici restano visibili, in grigio.</div>'
     + ESCLUDIBILI.map((n) => {
-        const on = escluse(S.dati, 'uscita').indexOf(n) >= 0;
-        return '<button class="row" data-escl="' + esc(n) + '"><div class="riga-nome">' + n + '</div>'
-          + '<div class="switch" data-on="' + (on ? 1 : 0) + '"><i></i></div></button>';
+        const conta = escluse(S.dati, 'uscita').indexOf(n) < 0;
+        return '<button class="row" role="switch" aria-checked="' + conta + '" data-escl="' + esc(n) + '"><div class="riga-nome">' + n + '</div>'
+          + '<div class="switch-stato' + (conta ? ' is-on' : '') + '">' + (conta ? 'Conta' : 'Non conta') + '</div>'
+          + '<div class="switch" data-on="' + (conta ? 1 : 0) + '"><i></i></div></button>';
       }).join('')
     + '</div>';
+}
+
+/* mese senza budget: si riparte da quello dell'ultimo mese che ne ha uno */
+function copiaBudget() {
+  const da = !totaleBudget(budgetDi(S.dati, S.mese)).categorie && meseBudgetPrecedente(S.dati, S.mese);
+  if (!da) return '';
+  const t = totaleBudget(S.dati.budget[da]);
+  return '<button class="row copia-riga" data-bud-copia="' + da + '"><div class="riga-nome">Copia da ' + meseInFrase(da, S.mese) + '</div>'
+    + '<div class="copia-riga-info">' + t.categorie + (t.categorie === 1 ? ' categoria' : ' categorie') + ' · ' + eur(t.totale) + '</div></button>';
 }
 
 function sezioneBudget() {
   const righe = righeBudget(S.dati, S.mese, uscitePerCategoria(delMese(S.dati.movimenti, S.mese)));
   return '<div class="sect">Budget · ' + nomeMese(S.mese) + '</div>'
     + '<div class="card lista">'
+    + copiaBudget()
     + righe.map((b) =>
         '<div class="row"><i class="dot" style="background:' + b.colore + '"></i>'
         + '<div class="ell budget-nome">' + esc(b.nome) + '</div>'

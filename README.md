@@ -23,7 +23,12 @@ nessun dato che esce dal dispositivo.
 
 Il permesso sulla cartella è persistente: Chrome non lo richiede a ogni avvio.
 Se lo revochi, l'app continua a funzionare salvando nel browser e l'indicatore in
-testata diventa giallo — basta ricollegare la cartella.
+testata diventa rosso («Accesso scaduto»): da **Impostazioni → Riattiva l'accesso**
+torna a scrivere nella stessa cartella, oppure il browser lo chiede al prossimo salvataggio.
+
+Se la cartella contiene già un `wallet-data.json` diverso dai dati del telefono (o il
+file è stato aggiornato da un altro dispositivo), l'app chiede quale versione tenere e
+salva l'altra accanto, come `wallet-data.backup-AAAA-MM-GG.json`.
 
 ---
 
@@ -72,7 +77,7 @@ src/
   export/               .json, .csv, .xlsx (zip minimale scritto a mano)
   ui/                   render, eventi, toast, componenti condivisi
     viste/              casa, storico, statistiche, impostazioni
-    sheet/              pannelli "aggiungi" e "dettaglio"
+    sheet/              pannelli "aggiungi / modifica", "dettaglio" e "quale versione tenere"
   styles/               CSS: variabili colore, base, layout, componenti, viste, sheet
 tests/                  test di core/ ed export/
 ```

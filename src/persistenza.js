@@ -1,11 +1,12 @@
 /* Salvataggio dei dati: sempre in localStorage, e nel file se c'è una cartella collegata. */
 
 import { S } from './state.js';
-import { FILENAME, LS_KEY } from './core/costanti.js';
-import { normalizza } from './core/dati.js';
+import { FILENAME, LS_KEY, LS_BANNER } from './core/costanti.js';
+import { normalizza, nomeBackup } from './core/dati.js';
+import { oggiISO } from './core/formato.js';
 import { supportaFS, chiediCartella, permessoAttivo, riattivaPermesso, leggiFile, scriviFile } from './storage/file.js';
 import { salvaHandle, leggiHandle } from './storage/handle-db.js';
-import { render, aggiornaStatoSalvataggio } from './ui/render.js';
+import { render, apriSheet, chiudiSheet, aggiornaStatoSalvataggio } from './ui/render.js';
 import { toast } from './ui/toast.js';
 
 // "aggiornato" dell'ultimo salvataggio su questo dispositivo ('' = mai salvato)
@@ -28,7 +29,7 @@ export async function salva() {
     S.salvato = 'adesso';
   } catch (e) {
     S.salvato = 'errore di scrittura';
-    toast('Scrittura non riuscita: ricollega la cartella dalle impostazioni.');
+    toast('Scrittura non riuscita, ma i dati sono al sicuro su questo telefono. Ricollega la cartella dalle impostazioni.');
   } finally {
     S.scrivo = false; aggiornaStatoSalvataggio();
   }
@@ -45,30 +46,68 @@ async function riattivaCartella(precedente) {
   S.permessoCartella = true;
   const file = await leggiFile(S.dirHandle);
   if (!file || !(String(file.aggiornato || '') > precedente)) return true;
-  // il file è più recente dei dati di prima di questa modifica: caricarlo la perde
-  if (!confirm(FILENAME + ' in ' + S.dirHandle.name + ' è stato aggiornato da un altro dispositivo. Vuoi caricarlo? (Annulla = sovrascrivo con i dati di questo dispositivo, compresa l\'ultima modifica)')) return true;
-  S.dati = normalizza(file);
-  ultimoSalvato = String(S.dati.aggiornato || '');
-  try { localStorage.setItem(LS_KEY, serializza(S.dati)); } catch (e) {}
-  S.salvato = 'dal file';
-  render();
+  // il file è più recente dei dati di prima di questa modifica: caricarlo la perde.
+  // Finché non si sceglie niente scritture sul file: "Decidi più tardi" lo richiede al prossimo salvataggio.
+  S.permessoCartella = false;
+  chiediVersione(S.dirHandle, file, 'riattiva');
   return false;
+}
+
+/* Pulsante "Riattiva l'accesso" delle impostazioni: chiede il permesso subito
+   invece di aspettare il prossimo salvataggio. */
+export async function riattivaAccesso() {
+  if (await riattivaCartella(ultimoSalvato)) await salva();
+  render();
+}
+
+/* stessi dati, a parte l'istante dell'ultimo salvataggio */
+function stessiDati(file, dati) {
+  const senzaData = (d) => JSON.stringify(Object.assign({}, d, { aggiornato: '' }));
+  return senzaData(normalizza(file)) === senzaData(dati);
+}
+
+/* File e telefono hanno dati diversi: il pannello chiede quale versione tenere.
+   origine: 'nuova' = cartella appena scelta, 'riattiva' = cartella già collegata. */
+function chiediVersione(h, file, origine) {
+  const dati = normalizza(file);
+  const piuRecente = String(dati.aggiornato || '') > String(S.dati.aggiornato || '') ? 'file' : 'locale';
+  S.conflitto = { h, file: dati, origine, piuRecente, scelta: piuRecente };
+  apriSheet();
+}
+
+/* Tiene la versione scelta e salva l'altra accanto al file, come copia di sicurezza. */
+export async function confermaVersione() {
+  const c = S.conflitto;
+  if (!c) return;
+  const tieniFile = c.scelta === 'file';
+  const backup = nomeBackup(oggiISO());
+  try {
+    await scriviFile(c.h, serializza(tieniFile ? S.dati : c.file), backup);
+    if (tieniFile) S.dati = c.file;
+    S.dirHandle = c.h;
+    S.permessoCartella = true;
+    if (c.origine === 'nuova') await salvaHandle(c.h);
+    chiudiSheet();
+    await salva();
+    render();
+    toast((tieniFile ? 'Caricato ' + FILENAME + '. I dati del telefono sono in ' : 'Tenuti i dati del telefono. Il file di prima è in ') + backup + '.');
+  } catch (e) {
+    toast('Non è stato possibile scrivere nella cartella ' + c.h.name + '.');
+  }
 }
 
 export async function scegliCartella() {
   try {
     const h = await chiediCartella();
     if (!h) return;
+    const esistente = await leggiFile(h);
+    if (esistente && Array.isArray(esistente.movimenti)) {
+      if (!S.dati.movimenti.length) S.dati = normalizza(esistente);
+      else if (!stessiDati(esistente, S.dati)) { chiediVersione(h, esistente, 'nuova'); return; }
+    }
     S.dirHandle = h;
     S.permessoCartella = true;
     await salvaHandle(h);
-    const esistente = await leggiFile(h);
-    if (esistente && Array.isArray(esistente.movimenti)) {
-      const n = esistente.movimenti.length;
-      if (!S.dati.movimenti.length || confirm('Trovato ' + FILENAME + ' con ' + n + ' movimenti. Vuoi caricarlo? (Annulla = sovrascrivo con i dati attuali)')) {
-        S.dati = normalizza(esistente);
-      }
-    }
     await salva();
     toast('Collegato: la cartella ' + h.name + ' ora contiene ' + FILENAME + '.');
     render();
@@ -81,6 +120,7 @@ export async function scegliCartella() {
    (vince il più recente). Senza permesso la cartella resta collegata e il permesso
    viene richiesto al primo salvataggio. */
 export async function avvia() {
+  try { S.bannerNascosto = localStorage.getItem(LS_BANNER) === '1'; } catch (e) {}
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (raw) {

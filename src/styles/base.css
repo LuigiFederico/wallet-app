@@ -11,6 +11,7 @@ input:focus, select:focus { outline: 2px solid var(--accento); outline-offset: -
 /* utilità */
 .num { font-variant-numeric: tabular-nums; }
 .ell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nascosto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 @keyframes fade { from { opacity: 0 } to { opacity: 1 } }
 @keyframes up { from { transform: translateY(100%) } to { transform: translateY(0) } }

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { datiVuoti, normalizza, bozzaPronta, movimentoDaBozza } from '../src/core/dati.js';
+import { datiVuoti, normalizza, bozzaPronta, movimentoDaBozza, bozzaDaMovimento, nomeBackup } from '../src/core/dati.js';
 
 test('datiVuoti ha categorie ed esclusioni del modello Excel', () => {
   const d = datiVuoti();
@@ -41,4 +41,16 @@ test('movimentoDaBozza arrotonda, usa la categoria come descrizione e segna i ri
   const e = movimentoDaBozza({ tipo: 'entrata', data: '2026-01-02', importo: '100', categoria: 'Stipendio', descrizione: 'Gennaio' });
   assert.equal('rimborsato' in e, false);
   assert.equal(e.descrizione, 'Gennaio');
+});
+
+test('bozzaDaMovimento riporta il movimento nel form', () => {
+  const m = { id: 'm1', tipo: 'uscita', data: '2026-09-18', importo: 42.5, categoria: 'Svago', descrizione: 'Cinema' };
+  assert.deepEqual(bozzaDaMovimento(m), { id: 'm1', tipo: 'uscita', data: '2026-09-18', importo: '42,5', categoria: 'Svago', descrizione: 'Cinema' });
+  // la descrizione di default (= categoria) torna vuota, così resta facoltativa
+  assert.equal(bozzaDaMovimento({ ...m, descrizione: 'Svago' }).descrizione, '');
+  assert.equal(bozzaPronta(bozzaDaMovimento(m)), true);
+});
+
+test('nomeBackup mette la data accanto al nome del file', () => {
+  assert.equal(nomeBackup('2026-09-25'), 'wallet-data.backup-2026-09-25.json');
 });

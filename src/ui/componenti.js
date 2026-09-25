@@ -1,6 +1,7 @@
 /* Frammenti HTML riusati da più viste. */
 
 import { S } from '../state.js';
+import { COLORE_FUORI } from '../core/costanti.js';
 import { esc, eur, dataBreve, sigla } from '../core/formato.js';
 import { colore, inAttesaDiRimborso } from '../core/calcoli.js';
 
@@ -12,6 +13,11 @@ function gradiente(ordinate, tot) {
     const a = (acc / tot) * 100; acc += c.val;
     return c.colore + ' ' + a.toFixed(2) + '% ' + ((acc / tot) * 100).toFixed(2) + '%';
   }).join(',');
+}
+
+/* Fette della ciambella: prima il portafoglio, poi le categorie escluse in grigio. */
+export function fetteUscite(r) {
+  return r.portafoglio.concat(r.fuori.map((c) => Object.assign({}, c, { colore: COLORE_FUORI })));
 }
 
 /* taglia: 'sm' (Casa) | 'lg' (Statistiche) */

@@ -11,16 +11,16 @@
   --inchiostro: #16130F;
   --testo-2: #5C554B;
   --testo-3: #6F675C;
-  --etichetta: #7C7367;
-  --tab-spento: #A39A8C;
-  --sigla-spenta: #B3AA9C;
+  --etichetta: #6F675C;
+  --tab-spento: #6F675C;
+  --sigla-spenta: #7A7266;
 
   /* accenti */
   --accento: #5B4BC4;
   --verde: #2E7356;
-  --verde-chiaro: #4E9C74;
   --rosso: #C0452B;
   --oro: #A8863C;
+  --oro-scuro: #7A5E1E;      /* testo bianco sopra: contrasto sufficiente */
   --giallo: #C99A2E;
   --grafico-in: #8FBBA6;
   --grafico-out: #E0553A;

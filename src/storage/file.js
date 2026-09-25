@@ -29,8 +29,8 @@ export async function leggiFile(dirHandle) {
   } catch (e) { return null; }
 }
 
-export async function scriviFile(dirHandle, testo) {
-  const fh = await dirHandle.getFileHandle(FILENAME, { create: true });
+export async function scriviFile(dirHandle, testo, nome = FILENAME) {
+  const fh = await dirHandle.getFileHandle(nome, { create: true });
   const w = await fh.createWritable();
   await w.write(testo);
   await w.close();
