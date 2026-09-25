@@ -9,7 +9,7 @@ function idb(mode, fn) {
       const db = req.result;
       const tx = db.transaction('handles', mode);
       const out = fn(tx.objectStore('handles'));
-      tx.oncomplete = () => { db.close(); resolve(out && out.result !== undefined ? out.result : out); };
+      tx.oncomplete = () => { db.close(); resolve(out ? out.result : undefined); };
       tx.onerror = () => { db.close(); reject(tx.error); };
     };
   });
