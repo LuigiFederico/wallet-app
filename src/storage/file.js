@@ -14,6 +14,11 @@ export async function permessoAttivo(h) {
   return (await h.queryPermission({ mode: 'readwrite' })) === 'granted';
 }
 
+/* Richiede di nuovo il permesso su una cartella già scelta: serve un gesto dell'utente. */
+export async function riattivaPermesso(h) {
+  try { return (await h.requestPermission({ mode: 'readwrite' })) === 'granted'; } catch (e) { return false; }
+}
+
 /* Contenuto del file già interpretato, oppure null se manca o non è JSON valido. */
 export async function leggiFile(dirHandle) {
   if (!dirHandle) return null;

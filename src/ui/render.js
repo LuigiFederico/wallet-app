@@ -14,7 +14,7 @@ const VISTE = { casa: vistaCasa, storico: vistaStorico, stats: vistaStats, impos
 export function aggiornaStatoSalvataggio() {
   const el = document.getElementById('statoSalva');
   if (!el) return;
-  el.dataset.stato = S.salvato.startsWith('errore') ? 'errore' : S.dirHandle ? 'file' : 'locale';
+  el.dataset.stato = S.salvato.startsWith('errore') ? 'errore' : S.dirHandle && S.permessoCartella ? 'file' : 'locale';
   el.querySelector('span').textContent = S.scrivo ? 'salvo…'
     : S.salvato === 'adesso' ? 'salvato adesso'
     : S.salvato === 'dal file' ? 'salvato'

@@ -9,6 +9,9 @@ import { supportaFS } from '../../storage/file.js';
 const ICONA_FILE = '<svg width="17" height="20" viewBox="0 0 18 22" fill="none"><path d="M2 1.8h9l5 5v13.4a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2.8a1 1 0 0 1 1-1Z" stroke="#5B4BC4" stroke-width="1.6"/><path d="M11 1.8V7h5" stroke="#5B4BC4" stroke-width="1.6"/></svg>';
 
 function avvisoFile(collegato) {
+  if (collegato && !S.permessoCartella) {
+    return '<div class="avviso avviso--attenzione">Al prossimo salvataggio il browser chiederà di nuovo il permesso su questa cartella: scegli «Consenti a ogni visita» per non doverlo più rifare.</div>';
+  }
   if (collegato) {
     return '<div class="avviso avviso--ok"><i></i><div>Salvataggio automatico attivo — ogni modifica riscrive il file.</div></div>';
   }

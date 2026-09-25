@@ -19,6 +19,7 @@ export const S = {
 
   // salvataggio
   dirHandle: null,
+  permessoCartella: false, // readwrite concesso sulla cartella in questa sessione
   salvato: 'mai',
   scrivo: false,
 
