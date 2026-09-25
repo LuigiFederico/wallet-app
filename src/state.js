@@ -12,7 +12,8 @@ export const S = {
   mese: oggiISO().slice(0, 7),
 
   // filtri delle viste
-  vista: 'mese',          // statistiche: 'mese' | 'anno'
+  vista: 'mese',          // statistiche: 'mese' | 'anno' | 'categoria'
+  catStats: null,         // statistiche, vista categoria: { tipo, nome } (null = la più spesa)
   filtro: 'Tutti',        // storico
   query: '',              // storico
   tutteCategorie: false,  // statistiche: mostra tutte le righe budget

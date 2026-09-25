@@ -32,6 +32,9 @@ export function render() {
   const y = main.scrollTop;
   main.innerHTML = (VISTE[S.tab] || vistaImpostazioni)();
   main.scrollTop = S.tab === S.ultimoTab ? y : 0;
+  // grafico della vista Categoria: il mese scelto resta al centro
+  const scorri = main.querySelector('.grafico-scorri'), on = scorri && scorri.querySelector('.grafico-sigla[data-on="1"]');
+  if (on) scorri.scrollLeft = on.parentNode.offsetLeft - (scorri.clientWidth - on.parentNode.offsetWidth) / 2;
   S.ultimoTab = S.tab;
   aggiornaStatoSalvataggio();
   renderSheets();

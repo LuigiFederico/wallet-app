@@ -1,6 +1,7 @@
 /* Totali, riepiloghi e budget. Funzioni pure: ricevono i dati, non leggono lo stato. */
 
 import { COLORE_DEFAULT, RUOLO_RIMBORSO } from './costanti.js';
+import { spostaChiaveMese } from './formato.js';
 
 export function categorie(dati, tipo) {
   return tipo === 'entrata' ? dati.categorie.entrate : dati.categorie.uscite;
@@ -106,4 +107,25 @@ export function righeConBudget(dati, bm, catTot) {
       barColore: bud && speso > bud ? '#C0452B' : c.colore
     };
   }).sort((a, b) => b.speso - a.speso);
+}
+
+/* Andamento di una categoria, un valore per mese dal mese del primo movimento a `oggi` ('AAAA-MM').
+   media: totale diviso per tutti i mesi, anche quelli a zero. delta: `mese` meno il mese prima.
+   Il budget c'è solo per le uscite; sforati = mesi con un budget superato. */
+export function andamentoCategoria(dati, tipo, nome, mese, oggi) {
+  const somma = {};
+  dati.movimenti.filter((m) => m.tipo === tipo && m.categoria === nome)
+    .forEach((m) => { const k = m.data.slice(0, 7); somma[k] = (somma[k] || 0) + m.importo; });
+  const primo = dati.movimenti.reduce((min, m) => (m.data.slice(0, 7) < min ? m.data.slice(0, 7) : min), oggi);
+  const mesi = [];
+  for (let k = primo; k <= oggi; k = spostaChiaveMese(k, 1)) {
+    mesi.push({ k, val: somma[k] || 0, bud: tipo === 'uscita' ? (dati.budget[k] || {})[nome] || 0 : 0 });
+  }
+  const totale = mesi.reduce((s, m) => s + m.val, 0);
+  const corrente = somma[mese] || 0, precedente = somma[spostaChiaveMese(mese, -1)] || 0;
+  return {
+    mesi, totale, media: totale / mesi.length, corrente, precedente, delta: corrente - precedente,
+    conBudget: mesi.filter((m) => m.bud > 0).length,
+    sforati: mesi.filter((m) => m.bud > 0 && m.val > m.bud).length
+  };
 }

@@ -1,10 +1,11 @@
-/* Statistiche: indicatori, uscite per categoria, andamento annuale, budget. */
+/* Statistiche: indicatori, uscite per categoria, andamento annuale, budget; vista Categoria. */
 
 import { S } from '../../state.js';
-import { esc, eur, eurSegno, chiaveMese, percentuale, indiceMese, meseInFrase } from '../../core/formato.js';
+import { esc, eur, eurSegno, chiaveMese, percentuale, indiceMese, meseInFrase, oggiISO, spostaChiaveMese } from '../../core/formato.js';
 import { MESI, SIGLE, COLORE_FUORI } from '../../core/costanti.js';
 import {
-  delMese, dellAnno, totale, riepilogo, righeBudget, righeConBudget, budgetDi, totaleBudget, meseBudgetPrecedente, daRimborsare
+  delMese, dellAnno, totale, riepilogo, righeBudget, righeConBudget, budgetDi, totaleBudget, meseBudgetPrecedente, daRimborsare,
+  categorie as categorieDi, uscitePerCategoria, andamentoCategoria
 } from '../../core/calcoli.js';
 import { ciambella, fetteUscite, testataSezione } from '../componenti.js';
 
@@ -119,15 +120,85 @@ function spesoVsPrevisto(catTot, perAnno) {
     + (S.tutteCategorie ? 'Mostra solo quelle a rischio' : 'Mostra tutte le ' + tutte.length + ' categorie') + '</button>';
 }
 
+/* Vista Categoria: la categoria scelta, oppure l'uscita con più spesa in tutta la storia. */
+function categoriaScelta() {
+  const c = S.catStats;
+  if (c && categorieDi(S.dati, c.tipo).some((x) => x.nome === c.nome)) return c;
+  const catTot = uscitePerCategoria(S.dati.movimenti);
+  const uscite = categorieDi(S.dati, 'uscita').slice().sort((a, b) => (catTot[b.nome] || 0) - (catTot[a.nome] || 0));
+  return uscite.length ? { tipo: 'uscita', nome: uscite[0].nome } : { tipo: 'entrata', nome: categorieDi(S.dati, 'entrata')[0].nome };
+}
+
+const ICONA_GIU = '<svg class="select-freccia" width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1.5 1.5 6 6l4.5-4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+/* value 'tipo:nome' */
+function selettoreCategoria(scelta, coloreScelto) {
+  const gruppo = (tipo, etichetta) => '<optgroup label="' + etichetta + '">'
+    + categorieDi(S.dati, tipo).map((c) => {
+        const on = scelta.tipo === tipo && scelta.nome === c.nome;
+        return '<option value="' + tipo + ':' + esc(c.nome) + '"' + (on ? ' selected' : '') + '>' + esc(c.nome) + '</option>';
+      }).join('') + '</optgroup>';
+  return '<div class="select-box stat-cat"><i class="dot select-dot" style="background:' + coloreScelto + '"></i>'
+    + '<select class="field field--select" id="statCat" aria-label="Categoria">'
+    + gruppo('uscita', 'Uscite') + gruppo('entrata', 'Entrate') + '</select>' + ICONA_GIU + '</div>';
+}
+
+function sigla3(mese) {
+  return MESI[indiceMese(mese)].slice(0, 3);
+}
+
+function indicatoriCategoria(a, uscita) {
+  const prima = spostaChiaveMese(S.mese, -1);
+  const pct = a.precedente ? '<div class="tile-sub">' + (a.delta >= 0 ? '+' : '−') + percentuale(Math.abs(a.delta), a.precedente) + '</div>' : '';
+  const sforati = !a.conBudget ? '—' : !a.sforati ? 'mai' : a.sforati === 1 ? '1 mese' : a.sforati + ' mesi';
+  return '<div class="tiles">'
+    + '<div class="tiles-riga">' + tile('Totale', eur(a.totale)) + tile('Media mensile', eur(a.media)) + '</div>'
+    + '<div class="tiles-riga">' + tile(sigla3(S.mese) + ' vs ' + sigla3(prima), eurSegno(a.delta) + pct)
+    + (uscita ? tile('Budget superato', sforati) : '') + '</div></div>';
+}
+
+/* una barra per mese; la tacca è il budget del mese. Si scorre in orizzontale se i mesi sono tanti. */
+function graficoCategoria(a, coloreCat, uscita) {
+  const max = Math.max(1, ...a.mesi.map((m) => Math.max(m.val, m.bud)));
+  const pct = (v) => ((v / max) * 100).toFixed(1) + '%';
+  return '<div class="h2 titolo-sez">Mese per mese</div>'
+    + '<div class="card grafico">'
+    + '<div class="grafico-scorri"><div class="grafico-barre grafico-barre--cat">'
+    + a.mesi.map((m, i) => '<button class="grafico-mese" data-mese="' + m.k + '">'
+        + '<div class="grafico-colonne">'
+        + '<i style="height:' + pct(m.val) + ';background:' + (m.bud && m.val > m.bud ? '#C0452B' : coloreCat) + '"></i>'
+        + (m.bud ? '<b class="grafico-tacca" style="bottom:' + pct(m.bud) + '"></b>' : '') + '</div>'
+        + '<div class="grafico-sigla" data-on="' + (m.k === S.mese ? 1 : 0) + '">' + SIGLE[indiceMese(m.k)] + '</div>'
+        + '<div class="grafico-anno">' + (i === 0 || m.k.slice(5) === '01' ? m.k.slice(0, 4) : '') + '</div></button>').join('')
+    + '</div></div>'
+    + '<div class="grafico-legenda">'
+    + '<div class="grafico-voce"><i style="background:' + coloreCat + '"></i>' + (uscita ? 'Speso' : 'Incassato') + '</div>'
+    + (uscita ? '<div class="grafico-voce"><i class="grafico-tacca-voce"></i>Budget</div><div class="grafico-voce"><i class="grafico-oltre"></i>Oltre il budget</div>' : '')
+    + '</div></div>';
+}
+
+function vistaCategoria() {
+  const scelta = categoriaScelta(), uscita = scelta.tipo === 'uscita';
+  const c = categorieDi(S.dati, scelta.tipo).find((x) => x.nome === scelta.nome);
+  const a = andamentoCategoria(S.dati, scelta.tipo, scelta.nome, S.mese, oggiISO().slice(0, 7));
+  return selettoreCategoria(scelta, c.colore)
+    + indicatoriCategoria(a, uscita)
+    + graficoCategoria(a, c.colore, uscita);
+}
+
 export function vistaStats() {
   const anno = S.mese.slice(0, 4);
   const perAnno = S.vista === 'anno';
+  const seg = '<div class="seg">'
+    + '<button data-vista="mese" data-on="' + (S.vista === 'mese' ? 1 : 0) + '">Mese</button>'
+    + '<button data-vista="anno" data-on="' + (perAnno ? 1 : 0) + '">Anno ' + anno + '</button>'
+    + '<button data-vista="categoria" data-on="' + (S.vista === 'categoria' ? 1 : 0) + '">Categoria</button></div>';
+  if (S.vista === 'categoria') return seg + vistaCategoria();
+
   const movs = perAnno ? dellAnno(S.dati.movimenti, anno) : delMese(S.dati.movimenti, S.mese);
   const r = riepilogo(S.dati, movs);
 
-  return '<div class="seg">'
-    + '<button data-vista="mese" data-on="' + (S.vista === 'mese' ? 1 : 0) + '">Mese</button>'
-    + '<button data-vista="anno" data-on="' + (perAnno ? 1 : 0) + '">Anno ' + anno + '</button></div>'
+  return seg
     + indicatori(r, daRimborsare(S.dati, movs))
     + perCategoria(r, r.tot || 1)
     + andamentoAnnuale(anno)

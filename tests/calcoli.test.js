@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { datiVuoti } from '../src/core/dati.js';
 import {
   colore, escluse, delMese, dellAnno, totale, uscitePerCategoria, riepilogo, daRimborsare, righeBudget,
-  budgetDi, meseBudgetPrecedente, totaleBudget, inAttesaDiRimborso, categoriaConRuolo
+  budgetDi, meseBudgetPrecedente, totaleBudget, inAttesaDiRimborso, categoriaConRuolo, andamentoCategoria
 } from '../src/core/calcoli.js';
 
 const mv = (tipo, data, importo, categoria, extra) => ({ id: data + categoria, tipo, data, importo, categoria, ...extra });
@@ -127,4 +127,27 @@ test('meseBudgetPrecedente salta i mesi vuoti e ignora quelli dopo', () => {
 test('totaleBudget conta solo le categorie con un importo', () => {
   assert.deepEqual(totaleBudget({ Affitto: 620, Svago: 0, Bollette: 150 }), { categorie: 2, totale: 770 });
   assert.deepEqual(totaleBudget({}), { categorie: 0, totale: 0 });
+});
+
+test('andamentoCategoria: tutti i mesi dal primo movimento, anche a zero', () => {
+  const d = esempio();
+  d.movimenti.push(mv('uscita', '2025-11-10', 300, 'Affitto'), mv('entrata', '2025-12-01', 50, 'Altro'));
+  d.budget['2026-08'] = { Affitto: 1000 };
+  const a = andamentoCategoria(d, 'uscita', 'Affitto', '2026-09', '2026-10');
+  assert.deepEqual(a.mesi.map((m) => m.k), ['2025-11', '2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05',
+    '2026-06', '2026-07', '2026-08', '2026-09', '2026-10']);
+  assert.equal(a.totale, 1899);
+  assert.equal(a.media, 1899 / 12);
+  assert.deepEqual([a.corrente, a.precedente, a.delta], [600, 999, -399]);
+  assert.deepEqual(a.mesi.find((m) => m.k === '2026-09'), { k: '2026-09', val: 600, bud: 500 });
+  assert.equal(a.conBudget, 2);
+  assert.equal(a.sforati, 1); // settembre sì, agosto no (999 < 1000)
+});
+
+test('andamentoCategoria: le entrate non hanno budget, un mese senza precedente parte da zero', () => {
+  const d = esempio();
+  const a = andamentoCategoria(d, 'entrata', 'Stipendio', '2026-09', '2026-09');
+  assert.deepEqual(a.mesi, [{ k: '2026-08', val: 0, bud: 0 }, { k: '2026-09', val: 2000, bud: 0 }]);
+  assert.deepEqual([a.delta, a.precedente, a.conBudget, a.sforati], [2000, 0, 0, 0]);
+  assert.equal(andamentoCategoria(datiVuoti(), 'uscita', 'Svago', '2026-09', '2026-09').mesi.length, 1);
 });

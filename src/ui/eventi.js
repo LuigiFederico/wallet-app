@@ -92,7 +92,7 @@ const CLICK_CONTENUTO = [
   ['[data-det]', (el) => { S.dettaglio = S.dati.movimenti.find((m) => m.id === el.dataset.det) || null; apriSheet(); }],
   ['[data-filtro]', (el) => { S.filtro = el.dataset.filtro; render(); }],
   ['[data-vista]', (el) => { S.vista = el.dataset.vista; render(); }],
-  ['[data-mese]', (el) => { S.mese = el.dataset.mese; S.vista = 'mese'; render(); }],
+  ['[data-mese]', (el) => { S.mese = el.dataset.mese; if (S.vista !== 'categoria') S.vista = 'mese'; render(); }],
   ['[data-escl]', (el) => toggleEsclusione(el.dataset.escl)],
   ['[data-bud-copia]', (el) => copiaBudget(el.dataset.budCopia)],
   ['[data-cat-nuova]', (el) => apriCategoria(el.dataset.catNuova, null)],
@@ -154,6 +154,11 @@ export function collegaEventi() {
   main.addEventListener('change', (e) => {
     if (e.target.classList.contains('bud')) setBudget(e.target.dataset.cat, e.target.value);
     if (e.target.id === 'imp' && e.target.files[0]) importaJson(e.target.files[0]);
+    if (e.target.id === 'statCat') {
+      const i = e.target.value.indexOf(':');
+      S.catStats = { tipo: e.target.value.slice(0, i), nome: e.target.value.slice(i + 1) };
+      render();
+    }
   });
 
   const sheets = document.getElementById('sheets');

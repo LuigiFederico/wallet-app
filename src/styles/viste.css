@@ -51,6 +51,7 @@
 .tile { flex: 1; border-radius: 16px; padding: 14px 15px; }
 .tile .lbl { font-size: 10px; margin-bottom: 8px; }
 .tile-val { font: 700 19px/1 var(--font); }
+.tile-sub { margin-top: 5px; font: 600 12px/1 var(--font); color: var(--testo-2); }
 .tile--scuro { background: var(--inchiostro); color: var(--carta); }
 .tile--scuro .lbl { color: rgba(247, 243, 236, .6); }
 
@@ -87,6 +88,17 @@
 .grafico-voce { display: flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font); color: var(--testo-2); }
 .grafico-voce > i { width: 9px; height: 9px; border-radius: 2px; }
 .grafico-nota { margin-left: auto; font: 600 11px/1 var(--font); color: var(--etichetta); }
+
+/* vista Categoria: una barra per mese, la tacca è il budget; con tanti mesi si scorre */
+.stat-cat { margin-bottom: 14px; }
+.grafico-scorri { position: relative; overflow-x: auto; }
+.grafico-scorri::-webkit-scrollbar { width: 0; height: 0; }
+.grafico-barre--cat .grafico-mese { min-width: 24px; }
+.grafico-barre--cat .grafico-colonne { position: relative; }
+.grafico-tacca { position: absolute; left: -2px; right: -2px; height: 2px; margin-bottom: -1px; border-radius: 1px; background: var(--inchiostro); }
+.grafico-anno { min-height: 9px; font: 600 8.5px/1 var(--font); color: var(--etichetta); }
+.grafico-voce > .grafico-tacca-voce { height: 2px; border-radius: 1px; background: var(--inchiostro); }
+.grafico-voce > .grafico-oltre { background: #C0452B; }
 
 /* ---------- Impostazioni ---------- */
 
