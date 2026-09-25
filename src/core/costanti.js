@@ -9,13 +9,27 @@ export const DA_RIMBORSARE = 'Da rimborsare';
 export const INVESTIMENTI = 'Investimenti';
 export const BUONI_PASTO = 'Buoni pasto';
 
-/* categorie che si possono escludere dal "totale portafoglio" (Impostazioni) */
-export const ESCLUDIBILI = [BUONI_PASTO, DA_RIMBORSARE, INVESTIMENTI];
+/* Ruoli: il comportamento speciale segue la categoria anche se viene rinominata. */
+export const RUOLO_RIMBORSO = 'rimborso';
+export const RUOLO_INVESTIMENTI = 'investimenti';
+export const RUOLO_BUONI_PASTO = 'buoniPasto';
+/* nome predefinito → ruolo (categorie nuove e file salvati prima dei ruoli) */
+export const RUOLI_PREDEFINITI = { [DA_RIMBORSARE]: RUOLO_RIMBORSO, [INVESTIMENTI]: RUOLO_INVESTIMENTI, [BUONI_PASTO]: RUOLO_BUONI_PASTO };
 
-export const FILTRI_STORICO = ['Tutti', 'Uscite', 'Entrate', DA_RIMBORSARE, INVESTIMENTI];
+/* ruoli che si possono escludere dal "totale portafoglio" (Impostazioni) */
+export const ESCLUDIBILI = [RUOLO_BUONI_PASTO, RUOLO_RIMBORSO, RUOLO_INVESTIMENTI];
+
+/* i filtri speciali sono ruoli: la chip mostra il nome attuale della categoria */
+export const FILTRI_STORICO = ['Tutti', 'Uscite', 'Entrate', RUOLO_RIMBORSO, RUOLO_INVESTIMENTI];
 
 export const COLORE_DEFAULT = '#8A8178';
 export const COLORE_FUORI = '#DDD5C7'; // fette delle categorie escluse dal portafoglio
+
+/* colori tra cui scegliere per una categoria (Impostazioni) */
+export const PALETTE = [
+  '#7A8B3F', '#4A5C8C', '#3E8391', '#7B4BC4', '#B0435A', '#2E7356',
+  '#C4763B', '#2F6E8F', '#B44A86', '#C0452B', '#B8801C', '#8A8178'
+];
 
 export const CAT_USCITE = [
   ['Spesa settimanale','#7A8B3F'], ['Affitto','#4A5C8C'], ['Bollette','#3E8391'],

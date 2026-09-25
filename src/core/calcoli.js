@@ -1,6 +1,6 @@
 /* Totali, riepiloghi e budget. Funzioni pure: ricevono i dati, non leggono lo stato. */
 
-import { COLORE_DEFAULT, DA_RIMBORSARE } from './costanti.js';
+import { COLORE_DEFAULT, RUOLO_RIMBORSO } from './costanti.js';
 
 export function categorie(dati, tipo) {
   return tipo === 'entrata' ? dati.categorie.entrate : dati.categorie.uscite;
@@ -15,8 +15,18 @@ export function escluse(dati, tipo) {
   return (tipo === 'entrata' ? e.entrate : e.uscite) || [];
 }
 
-export function inAttesaDiRimborso(m) {
-  return m.categoria === DA_RIMBORSARE && !m.rimborsato;
+/* la categoria con quel ruolo nel tipo dato, oppure undefined */
+export function categoriaConRuolo(dati, tipo, ruolo) {
+  return categorie(dati, tipo).find((c) => c.ruolo === ruolo);
+}
+/* la categoria del movimento (o della bozza) ha quel ruolo? */
+export function haRuolo(dati, m, ruolo) {
+  const c = categoriaConRuolo(dati, m.tipo, ruolo);
+  return !!c && c.nome === m.categoria;
+}
+
+export function inAttesaDiRimborso(dati, m) {
+  return haRuolo(dati, m, RUOLO_RIMBORSO) && !m.rimborsato;
 }
 
 export function delMese(movimenti, mese) {
@@ -55,8 +65,8 @@ export function riepilogo(dati, movs) {
   return { movs, entrate, uscite, rimasto: entrate - uscite, catTot, tot, ordinate, portafoglio, fuori };
 }
 
-export function daRimborsare(movs) {
-  return movs.filter((m) => m.tipo === 'uscita' && inAttesaDiRimborso(m)).reduce((s, m) => s + m.importo, 0);
+export function daRimborsare(dati, movs) {
+  return movs.filter((m) => m.tipo === 'uscita' && inAttesaDiRimborso(dati, m)).reduce((s, m) => s + m.importo, 0);
 }
 
 /* Budget di un periodo: 'AAAA-MM' è il mese, 'AAAA' la somma dei mesi di quell'anno. */

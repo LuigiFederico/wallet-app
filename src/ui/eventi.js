@@ -40,7 +40,7 @@ function salvaBozza() {
   // un'uscita "esce dal portafoglio": animazione, e il messaggio arriva quando è finita
   const ritardo = b.tipo === 'uscita' ? animaSalvataggio() : 0;
   chiudiSheet();
-  if (b.id) modifica(b, ritardo); else aggiungi(movimentoDaBozza(b), ritardo);
+  if (b.id) modifica(b, ritardo); else aggiungi(movimentoDaBozza(S.dati, b), ritardo);
 }
 
 function scegliGiorno(giorno) {

@@ -3,7 +3,7 @@
 import { S } from '../../state.js';
 import { esc, eur, nomeMese, quando, meseInFrase } from '../../core/formato.js';
 import { FILENAME, ESCLUDIBILI } from '../../core/costanti.js';
-import { delMese, escluse, uscitePerCategoria, righeBudget, budgetDi, totaleBudget, meseBudgetPrecedente } from '../../core/calcoli.js';
+import { delMese, escluse, uscitePerCategoria, righeBudget, budgetDi, totaleBudget, meseBudgetPrecedente, categoriaConRuolo } from '../../core/calcoli.js';
 import { supportaFS } from '../../storage/file.js';
 
 const ICONA_FILE = '<svg width="17" height="20" viewBox="0 0 18 22" fill="none"><path d="M2 1.8h9l5 5v13.4a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2.8a1 1 0 0 1 1-1Z" stroke="#5B4BC4" stroke-width="1.6"/><path d="M11 1.8V7h5" stroke="#5B4BC4" stroke-width="1.6"/></svg>';
@@ -60,9 +60,13 @@ function sezioneEsclusioni() {
   return '<div class="sect">Conta nel totale portafoglio</div>'
     + '<div class="card lista">'
     + '<div class="lista-nota">Le categorie spente non entrano in Rimasto e Risparmio. Nei grafici restano visibili, in grigio.</div>'
-    + ESCLUDIBILI.map((n) => {
-        const conta = escluse(S.dati, 'uscita').indexOf(n) < 0;
-        return '<button class="row" role="switch" aria-checked="' + conta + '" data-escl="' + esc(n) + '"><div class="riga-nome">' + n + '</div>'
+    + ESCLUDIBILI.map((ruolo) => {
+        // il nome è quello attuale della categoria con quel ruolo (prima tra le uscite)
+        const tipo = categoriaConRuolo(S.dati, 'uscita', ruolo) ? 'uscita' : 'entrata';
+        const c = categoriaConRuolo(S.dati, tipo, ruolo);
+        if (!c) return '';
+        const conta = escluse(S.dati, tipo).indexOf(c.nome) < 0;
+        return '<button class="row" role="switch" aria-checked="' + conta + '" data-escl="' + ruolo + '"><div class="riga-nome">' + esc(c.nome) + '</div>'
           + '<div class="switch-stato' + (conta ? ' is-on' : '') + '">' + (conta ? 'Conta' : 'Non conta') + '</div>'
           + '<div class="switch" data-on="' + (conta ? 1 : 0) + '"><i></i></div></button>';
       }).join('')

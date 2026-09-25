@@ -1,9 +1,9 @@
 /* Sheet "dettaglio movimento": rimborso, modifica, duplica, elimina. */
 
 import { S } from '../../state.js';
-import { DA_RIMBORSARE } from '../../core/costanti.js';
+import { RUOLO_RIMBORSO } from '../../core/costanti.js';
 import { esc, etichettaData } from '../../core/formato.js';
-import { inAttesaDiRimborso } from '../../core/calcoli.js';
+import { inAttesaDiRimborso, haRuolo } from '../../core/calcoli.js';
 import { avatarCategoria, importoMovimento } from '../componenti.js';
 
 const ICONA_MODIFICA = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11.8 2.8 15.2 6.2 6.4 15H3v-3.4l8.8-8.8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 4.6 13.4 8" stroke="currentColor" stroke-width="1.6"/></svg>';
@@ -18,9 +18,9 @@ export function sheetDettaglio() {
     + avatarCategoria(m, 'avatar--grande')
     + '<div class="det-testo"><div class="ell det-titolo">' + esc(m.descrizione || m.categoria) + '</div>'
     + '<div class="ell det-sub">' + esc(m.categoria) + ' · ' + esc(etichettaData(m.data))
-    + (m.rimborsato ? ' · rimborsato' : inAttesaDiRimborso(m) ? ' · <span class="det-attesa">in attesa</span>' : '') + '</div></div>'
+    + (m.rimborsato ? ' · rimborsato' : inAttesaDiRimborso(S.dati, m) ? ' · <span class="det-attesa">in attesa</span>' : '') + '</div></div>'
     + '<div class="num det-importo' + (m.tipo === 'entrata' ? ' is-entrata' : '') + '">' + importoMovimento(m) + '</div></div>'
-    + (m.categoria === DA_RIMBORSARE ? '<button id="detRimb" class="cta cta--rimborso">' + (m.rimborsato ? 'Segna come non rimborsato' : 'Segna come rimborsato') + '</button>' : '')
+    + (haRuolo(S.dati, m, RUOLO_RIMBORSO) ? '<button id="detRimb" class="cta cta--rimborso">' + (m.rimborsato ? 'Segna come non rimborsato' : 'Segna come rimborsato') + '</button>' : '')
     + '<div class="det-azioni">'
     + '<button id="detMod" class="det-btn">' + ICONA_MODIFICA + 'Modifica</button>'
     + '<button id="detDup" class="det-btn">' + ICONA_DUPLICA + 'Duplica su oggi</button>'

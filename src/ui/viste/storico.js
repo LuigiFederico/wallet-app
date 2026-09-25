@@ -2,16 +2,23 @@
 
 import { S } from '../../state.js';
 import { esc, etichettaData, eurSegno } from '../../core/formato.js';
-import { FILTRI_STORICO, DA_RIMBORSARE, INVESTIMENTI } from '../../core/costanti.js';
-import { delMese, inAttesaDiRimborso } from '../../core/calcoli.js';
+import { FILTRI_STORICO, RUOLO_RIMBORSO, RUOLO_INVESTIMENTI } from '../../core/costanti.js';
+import { delMese, inAttesaDiRimborso, haRuolo, categoriaConRuolo } from '../../core/calcoli.js';
 import { rigaMovimentoCompatta } from '../componenti.js';
 
 const FILTRI = {
   'Uscite': (m) => m.tipo === 'uscita',
   'Entrate': (m) => m.tipo === 'entrata',
-  [DA_RIMBORSARE]: inAttesaDiRimborso,
-  [INVESTIMENTI]: (m) => m.categoria === INVESTIMENTI
+  [RUOLO_RIMBORSO]: (m) => inAttesaDiRimborso(S.dati, m),
+  [RUOLO_INVESTIMENTI]: (m) => haRuolo(S.dati, m, RUOLO_INVESTIMENTI)
 };
+
+/* etichetta della chip: per i ruoli il nome attuale della categoria ('' = categoria eliminata) */
+function etichettaFiltro(f) {
+  if (f !== RUOLO_RIMBORSO && f !== RUOLO_INVESTIMENTI) return f;
+  const c = categoriaConRuolo(S.dati, 'uscita', f) || categoriaConRuolo(S.dati, 'entrata', f);
+  return c ? c.nome : '';
+}
 
 function movimentiFiltrati() {
   const q = S.query.toLowerCase();
@@ -48,8 +55,8 @@ export function vistaStorico() {
     + '<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="6.8" cy="6.8" r="5" stroke="#6F675C" stroke-width="1.6"/><path d="M10.6 10.6L14.5 14.5" stroke="#6F675C" stroke-width="1.6" stroke-linecap="round"/></svg>'
     + '<input id="q" class="cerca-input" value="' + esc(S.query) + '" placeholder="Cerca in tutti i mesi">'
     + '</div>'
-    + '<div class="chips">' + FILTRI_STORICO
-        .map((f) => '<button class="chip" data-filtro="' + f + '" data-on="' + (S.filtro === f ? 1 : 0) + '">' + f + '</button>').join('') + '</div>'
+    + '<div class="chips">' + FILTRI_STORICO.filter(etichettaFiltro)
+        .map((f) => '<button class="chip" data-filtro="' + f + '" data-on="' + (S.filtro === f ? 1 : 0) + '">' + esc(etichettaFiltro(f)) + '</button>').join('') + '</div>'
     + (S.query ? '<div class="risultati">' + lista.length + ' risultati in tutti i mesi</div>' : '')
     + (gruppi.length
         ? '<div class="giorni">' + gruppi.map(gruppo).join('') + '</div>'

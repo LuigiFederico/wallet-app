@@ -88,7 +88,7 @@ tests/                  test di core/ ed export/
 
 ```json
 {
-  "versione": 1,
+  "versione": 2,
   "valuta": "EUR",
   "aggiornato": "2026-09-18T09:14:00.000Z",
   "escludiDaPortafoglio": {
@@ -96,7 +96,10 @@ tests/                  test di core/ ed export/
     "entrate": ["Buoni pasto", "Investimenti"]
   },
   "categorie": {
-    "uscite": [{ "nome": "Affitto", "colore": "#4A5C8C" }],
+    "uscite": [
+      { "nome": "Affitto", "colore": "#4A5C8C" },
+      { "nome": "Da rimborsare", "colore": "#A8863C", "ruolo": "rimborso" }
+    ],
     "entrate": [{ "nome": "Stipendio", "colore": "#2E7356" }]
   },
   "budget": {
@@ -115,7 +118,13 @@ tests/                  test di core/ ed export/
 }
 ```
 
-Le voci con categoria `Da rimborsare` hanno in più `"rimborsato": false` finché non
+Il campo `ruolo` lega un comportamento speciale alla categoria, qualunque sia il suo nome:
+`rimborso` (spunta "rimborsato" e filtro nello Storico), `investimenti` (filtro nello Storico)
+e `buoniPasto`. Le categorie con questi tre ruoli hanno l'interruttore "Conta nel totale
+portafoglio" in Impostazioni. I file della versione 1 non avevano i ruoli: all'apertura li
+ricevono le categorie `Da rimborsare`, `Investimenti` e `Buoni pasto`.
+
+Le voci di una categoria con ruolo `rimborso` hanno in più `"rimborsato": false` finché non
 le segni come rimborsate.
 
 Il file è leggibile e modificabile a mano: se lo cambi da fuori, riapri l'app e lo

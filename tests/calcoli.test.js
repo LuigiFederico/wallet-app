@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { datiVuoti } from '../src/core/dati.js';
 import {
   colore, escluse, delMese, dellAnno, totale, uscitePerCategoria, riepilogo, daRimborsare, righeBudget,
-  budgetDi, meseBudgetPrecedente, totaleBudget
+  budgetDi, meseBudgetPrecedente, totaleBudget, inAttesaDiRimborso, categoriaConRuolo
 } from '../src/core/calcoli.js';
 
 const mv = (tipo, data, importo, categoria, extra) => ({ id: data + categoria, tipo, data, importo, categoria, ...extra });
@@ -74,7 +74,17 @@ test('riepilogo separa le categorie del portafoglio da quelle escluse', () => {
 
 test('daRimborsare conta solo le uscite non ancora rimborsate', () => {
   const d = esempio();
-  assert.equal(daRimborsare(d.movimenti), 40);
+  assert.equal(daRimborsare(d, d.movimenti), 40);
+});
+
+test('il rimborso segue la categoria anche dopo una rinomina', () => {
+  const d = esempio();
+  const c = categoriaConRuolo(d, 'uscita', 'rimborso');
+  c.nome = 'Anticipi';
+  d.movimenti.forEach((m) => { if (m.categoria === 'Da rimborsare') m.categoria = 'Anticipi'; });
+  assert.equal(daRimborsare(d, d.movimenti), 40);
+  assert.equal(inAttesaDiRimborso(d, { tipo: 'uscita', categoria: 'Da rimborsare' }), false);
+  assert.equal(categoriaConRuolo(d, 'entrata', 'rimborso'), undefined);
 });
 
 test('righeBudget: barra piena e rossa quando si sfora', () => {

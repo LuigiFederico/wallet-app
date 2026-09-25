@@ -1,7 +1,8 @@
 /* Modifiche ai dati: ognuna salva e ridisegna. Quelle distruttive si possono annullare dal toast. */
 
 import { S } from './state.js';
-import { DA_RIMBORSARE } from './core/costanti.js';
+import { RUOLO_RIMBORSO } from './core/costanti.js';
+import { haRuolo, categoriaConRuolo } from './core/calcoli.js';
 import { normalizza, nuovoId, movimentoDaBozza } from './core/dati.js';
 import { eurEsatto, oggiISO, parseImporto, spostaChiaveMese, meseInFrase } from './core/formato.js';
 import { salva } from './persistenza.js';
@@ -32,10 +33,10 @@ export function modifica(b, ritardoToast) {
   if (i < 0) return;
   snapshot();
   const prima = S.dati.movimenti[i];
-  const mv = Object.assign({}, prima, movimentoDaBozza(b), { id: b.id });
-  // il rimborso resta segnato se la categoria non cambia; sparisce se non è più "Da rimborsare"
-  if (mv.categoria !== DA_RIMBORSARE) delete mv.rimborsato;
-  else if (prima.categoria === DA_RIMBORSARE) mv.rimborsato = !!prima.rimborsato;
+  const mv = Object.assign({}, prima, movimentoDaBozza(S.dati, b), { id: b.id });
+  // il rimborso resta segnato se la categoria non cambia; sparisce se non è più da rimborsare
+  if (!haRuolo(S.dati, mv, RUOLO_RIMBORSO)) delete mv.rimborsato;
+  else if (haRuolo(S.dati, prima, RUOLO_RIMBORSO)) mv.rimborsato = !!prima.rimborsato;
   S.dati.movimenti[i] = mv;
   S.mese = mv.data.slice(0, 7);
   salva(); render();
@@ -78,12 +79,15 @@ export function copiaBudget(da) {
   toast('Budget di ' + meseInFrase(da, S.mese) + ' copiato su ' + meseInFrase(S.mese, S.mese) + '.', annullaUltima);
 }
 
-export function toggleEsclusione(nome) {
+/* vale per la categoria con quel ruolo sia tra le uscite sia tra le entrate */
+export function toggleEsclusione(ruolo) {
   const e = S.dati.escludiDaPortafoglio;
-  ['uscite', 'entrate'].forEach((k) => {
-    if (k === 'entrate' && nome === DA_RIMBORSARE) return;
-    const i = (e[k] || []).indexOf(nome);
-    if (i >= 0) e[k].splice(i, 1); else e[k].push(nome);
+  [['uscita', 'uscite'], ['entrata', 'entrate']].forEach(([tipo, k]) => {
+    const c = categoriaConRuolo(S.dati, tipo, ruolo);
+    if (!c) return;
+    if (!e[k]) e[k] = [];
+    const i = e[k].indexOf(c.nome);
+    if (i >= 0) e[k].splice(i, 1); else e[k].push(c.nome);
   });
   salva(); render();
 }

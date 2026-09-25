@@ -128,7 +128,7 @@ export function vistaStats() {
   return '<div class="seg">'
     + '<button data-vista="mese" data-on="' + (S.vista === 'mese' ? 1 : 0) + '">Mese</button>'
     + '<button data-vista="anno" data-on="' + (perAnno ? 1 : 0) + '">Anno ' + anno + '</button></div>'
-    + indicatori(r, daRimborsare(movs))
+    + indicatori(r, daRimborsare(S.dati, movs))
     + perCategoria(r, r.tot || 1)
     + andamentoAnnuale(anno)
     + spesoVsPrevisto(r.catTot, perAnno);

@@ -40,7 +40,7 @@ export function avatarCategoria(m, classe) {
 
 function testoMovimento(m) {
   return '<div class="mov-testo"><div class="ell mov-titolo">' + esc(m.descrizione || m.categoria) + '</div>'
-    + '<div class="ell mov-sub">' + esc(m.categoria) + (inAttesaDiRimborso(m) ? ' · in attesa' : '') + '</div></div>';
+    + '<div class="ell mov-sub">' + esc(m.categoria) + (inAttesaDiRimborso(S.dati, m) ? ' · in attesa' : '') + '</div></div>';
 }
 
 function classeImporto(m) {
