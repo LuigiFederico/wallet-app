@@ -1,4 +1,4 @@
-/* Pannelli dal basso: "aggiungi", "dettaglio" e "quale versione tenere". */
+/* Pannelli dal basso: "aggiungi", "dettaglio", "quale versione tenere" e "categoria". */
 
 .sheet { position: fixed; inset: 0; z-index: 70; display: flex; flex-direction: column; justify-content: flex-end; }
 .scrim { position: absolute; inset: 0; background: rgba(22, 19, 15, .45); animation: fade .18s ease; }
@@ -136,3 +136,10 @@
 @keyframes ala { from { transform: scaleX(1) } to { transform: scaleX(.22) } }
 @keyframes giu { from { transform: translateY(0) } to { transform: translateY(105%) } }
 @keyframes svanisci { from { opacity: 1 } to { opacity: 0 } }
+
+/* nuova / modifica categoria */
+.colori { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+.colore { aspect-ratio: 1; min-height: 40px; border-radius: 50%; }
+.colore[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--carta), 0 0 0 5px var(--inchiostro); }
+.cat-elimina { color: #A93A22; }
+.cat-conferma:not([disabled]) { background: #A93A22; color: #fff; }

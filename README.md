@@ -77,7 +77,7 @@ src/
   export/               .json, .csv, .xlsx (zip minimale scritto a mano)
   ui/                   render, eventi, toast, componenti condivisi
     viste/              casa, storico, statistiche, impostazioni
-    sheet/              pannelli "aggiungi / modifica", "dettaglio" e "quale versione tenere"
+    sheet/              pannelli "aggiungi / modifica", "dettaglio", "quale versione tenere" e "categoria"
   styles/               CSS: variabili colore, base, layout, componenti, viste, sheet
 tests/                  test di core/ ed export/
 ```

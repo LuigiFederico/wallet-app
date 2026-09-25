@@ -1,9 +1,9 @@
-/* Impostazioni: file collegato ed export, esclusioni dal portafoglio, budget del mese. */
+/* Impostazioni: file collegato ed export, esclusioni dal portafoglio, categorie, budget del mese. */
 
 import { S } from '../../state.js';
 import { esc, eur, nomeMese, quando, meseInFrase } from '../../core/formato.js';
 import { FILENAME, ESCLUDIBILI } from '../../core/costanti.js';
-import { delMese, escluse, uscitePerCategoria, righeBudget, budgetDi, totaleBudget, meseBudgetPrecedente, categoriaConRuolo } from '../../core/calcoli.js';
+import { delMese, escluse, uscitePerCategoria, righeBudget, budgetDi, totaleBudget, meseBudgetPrecedente, categoriaConRuolo, categorie } from '../../core/calcoli.js';
 import { supportaFS } from '../../storage/file.js';
 
 const ICONA_FILE = '<svg width="17" height="20" viewBox="0 0 18 22" fill="none"><path d="M2 1.8h9l5 5v13.4a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2.8a1 1 0 0 1 1-1Z" stroke="#5B4BC4" stroke-width="1.6"/><path d="M11 1.8V7h5" stroke="#5B4BC4" stroke-width="1.6"/></svg>';
@@ -73,6 +73,19 @@ function sezioneEsclusioni() {
     + '</div>';
 }
 
+const ICONA_AVANTI = '<svg width="7" height="12" viewBox="0 0 8 13" fill="none"><path d="M1.5 1L6.5 6.5L1.5 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+
+/* un tocco su una categoria la modifica; uscite ed entrate sono elenchi separati */
+function sezioneCategorie(tipo, titolo) {
+  return '<div class="sect">' + titolo + '</div>'
+    + '<div class="card lista">'
+    + categorie(S.dati, tipo).map((c) =>
+        '<button class="row" data-cat-mod="' + tipo + '" data-nome="' + esc(c.nome) + '"><i class="dot" style="background:' + c.colore + '"></i>'
+        + '<div class="ell riga-nome">' + esc(c.nome) + '</div><span class="riga-freccia">' + ICONA_AVANTI + '</span></button>').join('')
+    + '<button class="row copia-riga" data-cat-nuova="' + tipo + '"><div class="riga-nome">+ Nuova categoria</div></button>'
+    + '</div>';
+}
+
 /* mese senza budget: si riparte da quello dell'ultimo mese che ne ha uno */
 function copiaBudget() {
   const da = !totaleBudget(budgetDi(S.dati, S.mese)).categorie && meseBudgetPrecedente(S.dati, S.mese);
@@ -98,6 +111,8 @@ function sezioneBudget() {
 export function vistaImpostazioni() {
   return sezioneFile()
     + sezioneEsclusioni()
+    + sezioneCategorie('uscita', 'Categorie di uscita')
+    + sezioneCategorie('entrata', 'Categorie di entrata')
     + sezioneBudget()
     + '<div class="piede">Butterflies in the wallet<br>' + S.dati.movimenti.length + ' movimenti salvati</div>';
 }

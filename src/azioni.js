@@ -3,7 +3,7 @@
 import { S } from './state.js';
 import { RUOLO_RIMBORSO } from './core/costanti.js';
 import { haRuolo, categoriaConRuolo } from './core/calcoli.js';
-import { normalizza, nuovoId, movimentoDaBozza } from './core/dati.js';
+import { normalizza, nuovoId, movimentoDaBozza, aggiungiCategoria, modificaCategoria, eliminaCategoria } from './core/dati.js';
 import { eurEsatto, oggiISO, parseImporto, spostaChiaveMese, meseInFrase } from './core/formato.js';
 import { salva } from './persistenza.js';
 import { render } from './ui/render.js';
@@ -90,6 +90,25 @@ export function toggleEsclusione(ruolo) {
     if (i >= 0) e[k].splice(i, 1); else e[k].push(c.nome);
   });
   salva(); render();
+}
+
+/* c: la bozza dello sheet categoria (originale = null per una categoria nuova) */
+export function salvaCategoria(c) {
+  snapshot();
+  const nome = c.nome.trim();
+  if (c.originale) modificaCategoria(S.dati, c.tipo, c.originale, nome, c.colore);
+  else aggiungiCategoria(S.dati, c.tipo, nome, c.colore);
+  salva(); render();
+  toast(!c.originale ? 'Categoria ' + nome + ' aggiunta.'
+    : nome !== c.originale ? c.originale + ' ora si chiama ' + nome + '.' : 'Categoria aggiornata.', annullaUltima);
+}
+
+/* destinazione: dove vanno movimenti e budget (vuota se non ce ne sono) */
+export function rimuoviCategoria(tipo, nome, destinazione) {
+  snapshot();
+  eliminaCategoria(S.dati, tipo, nome, destinazione);
+  salva(); render();
+  toast('Categoria ' + nome + ' eliminata' + (destinazione ? ': il suo contenuto ora è in ' + destinazione : '') + '.', annullaUltima);
 }
 
 export function spostaMese(delta) {

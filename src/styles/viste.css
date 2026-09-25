@@ -114,6 +114,7 @@
 .switch-stato { flex: none; font: 600 11.5px/1 var(--font); color: var(--etichetta); }
 .switch-stato.is-on { font-weight: 700; color: var(--verde); }
 .copia-riga .riga-nome { color: var(--accento); font-weight: 700; }
+.riga-freccia { flex: none; display: flex; color: var(--testo-3); }
 .copia-riga-info { flex: none; font: 600 11.5px/1 var(--font); color: var(--etichetta); }
 
 .switch { width: 44px; height: 26px; border-radius: 99px; position: relative; flex: none; background: rgba(22, 19, 15, .16); }

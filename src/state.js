@@ -27,6 +27,7 @@ export const S = {
   bozza: null,            // form "aggiungi" / "modifica" (con id)
   dettaglio: null,        // movimento selezionato
   conflitto: null,        // file e telefono diversi: quale versione tenere
+  categoria: null,        // nuova / modifica categoria: { tipo, originale, nome, colore, eliminando, destinazione }
 
   bannerNascosto: false,  // Casa: "collega una cartella" chiuso con "Più tardi"
 

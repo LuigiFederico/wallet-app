@@ -3,15 +3,18 @@
 import { S } from '../state.js';
 import { LS_BANNER } from '../core/costanti.js';
 import { oggiISO, ieriISO } from '../core/formato.js';
-import { bozzaPronta, movimentoDaBozza, bozzaDaMovimento } from '../core/dati.js';
+import { PALETTE } from '../core/costanti.js';
+import { bozzaPronta, movimentoDaBozza, bozzaDaMovimento, usoCategoria } from '../core/dati.js';
+import { categorie, colore } from '../core/calcoli.js';
 import {
   aggiungi, modifica, elimina, duplica, toggleRimborso, setBudget, copiaBudget, toggleEsclusione,
-  spostaMese, meseCorrente, importaJson
+  spostaMese, meseCorrente, importaJson, salvaCategoria, rimuoviCategoria
 } from '../azioni.js';
 import { scegliCartella, riattivaAccesso, confermaVersione } from '../persistenza.js';
 import { exportJson, exportCsv, exportXlsx } from '../export/index.js';
 import { render, renderSheets, apriSheet, chiudiSheet } from './render.js';
 import { aggiornaForm, animaSalvataggio } from './sheet/aggiungi.js';
+import { aggiornaCategoria } from './sheet/categoria.js';
 
 function vaiA(tab) { S.tab = tab; render(); }
 
@@ -53,6 +56,30 @@ function scegliGiorno(giorno) {
   aggiornaForm();
 }
 
+/* nome = null: categoria nuova, con il primo colore della tavolozza non ancora usato in quel tipo */
+function apriCategoria(tipo, nome) {
+  const usati = categorie(S.dati, tipo).map((c) => c.colore);
+  S.categoria = {
+    tipo, originale: nome, nome: nome || '', eliminando: false, destinazione: '',
+    colore: nome ? colore(S.dati, nome, tipo) : PALETTE.find((c) => usati.indexOf(c) < 0) || PALETTE[0]
+  };
+  apriSheet();
+}
+
+/* senza movimenti né budget si elimina subito (si può annullare dal toast), altrimenti si sceglie dove spostarli */
+function eliminaCategoria() {
+  const c = S.categoria, u = usoCategoria(S.dati, c.tipo, c.originale);
+  if (u.movimenti || u.budget) { c.eliminando = true; renderSheets(); return; }
+  chiudiSheet();
+  rimuoviCategoria(c.tipo, c.originale);
+}
+
+function confermaElimina() {
+  const c = S.categoria;
+  chiudiSheet();
+  rimuoviCategoria(c.tipo, c.originale, c.destinazione);
+}
+
 function nascondiBanner() {
   S.bannerNascosto = true;
   try { localStorage.setItem(LS_BANNER, '1'); } catch (e) {}
@@ -68,6 +95,8 @@ const CLICK_CONTENUTO = [
   ['[data-mese]', (el) => { S.mese = el.dataset.mese; S.vista = 'mese'; render(); }],
   ['[data-escl]', (el) => toggleEsclusione(el.dataset.escl)],
   ['[data-bud-copia]', (el) => copiaBudget(el.dataset.budCopia)],
+  ['[data-cat-nuova]', (el) => apriCategoria(el.dataset.catNuova, null)],
+  ['[data-cat-mod]', (el) => apriCategoria(el.dataset.catMod, el.dataset.nome)],
   ['#toggleTutte', () => { S.tutteCategorie = !S.tutteCategorie; render(); }],
   ['#pickDir', scegliCartella],
   ['#riattiva', riattivaAccesso],
@@ -86,7 +115,12 @@ const CLICK_SHEET = [
   ['#detMod', apriModifica],
   ['#detDup', () => { const m = S.dettaglio; chiudiSheet(); duplica(m); }],
   ['#detDel', () => { const id = S.dettaglio.id; chiudiSheet(); elimina(id); }],
-  ['#confOk', confermaVersione]
+  ['#confOk', confermaVersione],
+  ['[data-colore]', (el) => { S.categoria.colore = el.dataset.colore; renderSheets(); }],
+  ['#salvaCat', () => { const c = S.categoria; chiudiSheet(); salvaCategoria(c); }],
+  ['#eliminaCat', eliminaCategoria],
+  ['#annullaElimina', () => { S.categoria.eliminando = false; S.categoria.destinazione = ''; renderSheets(); }],
+  ['#confElimina', confermaElimina]
 ];
 
 function delega(gestori) {
@@ -125,6 +159,7 @@ export function collegaEventi() {
   const sheets = document.getElementById('sheets');
   sheets.addEventListener('click', delega(CLICK_SHEET));
   sheets.addEventListener('input', (e) => {
+    if (S.categoria && e.target.id === 'c-nome') { S.categoria.nome = e.target.value; aggiornaCategoria(); }
     if (!S.bozza) return;
     if (e.target.id === 'f-data' && e.target.value) S.bozza.data = e.target.value;
     if (e.target.id === 'f-imp') S.bozza.importo = e.target.value;
@@ -134,12 +169,13 @@ export function collegaEventi() {
   sheets.addEventListener('change', (e) => {
     if (S.bozza && e.target.id === 'f-cat') { S.bozza.categoria = e.target.value; aggiornaForm(); }
     if (S.conflitto && e.target.name === 'versione') { S.conflitto.scelta = e.target.value; renderSheets(); }
+    if (S.categoria && e.target.id === 'c-dest') { S.categoria.destinazione = e.target.value; renderSheets(); }
   });
 
   // tasto Indietro (Android) o gesto indietro: chiude il pannello aperto
   window.addEventListener('popstate', () => {
-    if (!S.bozza && !S.dettaglio && !S.conflitto) return;
-    S.bozza = null; S.dettaglio = null; S.conflitto = null;
+    if (!S.bozza && !S.dettaglio && !S.conflitto && !S.categoria) return;
+    S.bozza = null; S.dettaglio = null; S.conflitto = null; S.categoria = null;
     renderSheets();
   });
 
@@ -150,6 +186,6 @@ export function collegaEventi() {
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && (S.bozza || S.dettaglio || S.conflitto)) chiudiSheet();
+    if (e.key === 'Escape' && (S.bozza || S.dettaglio || S.conflitto || S.categoria)) chiudiSheet();
   });
 }

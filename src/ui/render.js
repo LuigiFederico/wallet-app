@@ -9,6 +9,7 @@ import { vistaImpostazioni } from './viste/impostazioni.js';
 import { sheetAggiungi } from './sheet/aggiungi.js';
 import { sheetDettaglio } from './sheet/dettaglio.js';
 import { sheetConflitto } from './sheet/conflitto.js';
+import { sheetCategoria } from './sheet/categoria.js';
 
 const VISTE = { casa: vistaCasa, storico: vistaStorico, stats: vistaStats, impostazioni: vistaImpostazioni };
 
@@ -39,12 +40,13 @@ export function render() {
 let ultimoSheet = '';
 
 export function renderSheets() {
-  const quale = S.conflitto ? 'conflitto' : S.bozza ? 'bozza' : S.dettaglio ? 'dettaglio' : '';
+  const quale = S.conflitto ? 'conflitto' : S.bozza ? 'bozza' : S.dettaglio ? 'dettaglio' : S.categoria ? 'categoria' : '';
   const host = document.getElementById('sheets');
   // ridisegnare lo stesso pannello non ne ripete l'animazione di entrata
   host.dataset.fermo = quale && quale === ultimoSheet ? 1 : 0;
   ultimoSheet = quale;
-  host.innerHTML = quale === 'conflitto' ? sheetConflitto() : quale === 'bozza' ? sheetAggiungi() : quale === 'dettaglio' ? sheetDettaglio() : '';
+  host.innerHTML = quale === 'conflitto' ? sheetConflitto() : quale === 'bozza' ? sheetAggiungi() : quale === 'dettaglio' ? sheetDettaglio()
+    : quale === 'categoria' ? sheetCategoria() : '';
 }
 
 /* Un pannello aperto occupa una voce della cronologia: il tasto Indietro di Android
@@ -55,7 +57,7 @@ export function apriSheet() {
 }
 
 export function chiudiSheet() {
-  S.bozza = null; S.dettaglio = null; S.conflitto = null;
+  S.bozza = null; S.dettaglio = null; S.conflitto = null; S.categoria = null;
   renderSheets();
   if (history.state && history.state.sheet) history.back();
 }
