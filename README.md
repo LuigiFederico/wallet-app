@@ -12,7 +12,7 @@ nessun dato che esce dal dispositivo.
 
 ## Installare sul telefono (Samsung / Android)
 
-1. Pubblica questa cartella su un indirizzo **HTTPS** (vedi sotto: GitHub Pages).
+1. Pubblica l'app su un indirizzo **HTTPS** (vedi sotto: GitHub Pages).
 2. Apri l'indirizzo con **Chrome** sul telefono.
 3. Menu ⋮ → **Installa app** (o "Aggiungi a schermata Home").
 4. Apri l'app dall'icona. Vai in **Impostazioni → Scegli la cartella** e indica dove
@@ -27,36 +27,55 @@ testata diventa giallo — basta ricollegare la cartella.
 
 ---
 
-## Pubblicare con GitHub Pages
+## Sviluppo
+
+Serve Node.js 22+.
 
 ```bash
-git clone https://github.com/LuigiFederico/wallet-app.git
-cd wallet-app
-# copia qui il contenuto della cartella pwa/ (index.html, app.js, sw.js, manifest, icons/)
-git add .
-git commit -m "PWA Butterflies in the wallet"
-git push
+npm install
+npm run dev       # server di sviluppo con ricarica automatica
+npm test          # test della logica (node:test)
+npm run build     # build di produzione in dist/
+npm run preview   # prova la build in locale, service worker compreso
 ```
 
-Poi su GitHub: **Settings → Pages → Source: Deploy from a branch → `main` / `root`**.
-
-Dopo un minuto l'app è su `https://luigifederico.github.io/wallet-app/`.
-
-Se preferisci tenere i file dentro `pwa/`, imposta Pages su `main` / `/docs` e
-rinomina la cartella in `docs`, oppure sposta i file nella radice del repo.
+In sviluppo il service worker non viene registrato, così non servono file vecchi dalla cache.
 
 ---
 
-## Cosa c'è dentro
+## Pubblicare con GitHub Pages
 
-| File | A cosa serve |
-| --- | --- |
-| `index.html` | struttura e stile dell'app |
-| `app.js` | tutta la logica: dati, viste, salvataggio su file, export |
-| `sw.js` | service worker — l'app funziona offline |
-| `manifest.webmanifest` | nome, icone, avvio a schermo intero |
-| `icons/` | icone 192 / 512 / maskable, generate dal logo |
-| `.nojekyll` | evita che GitHub Pages ignori alcuni file |
+Il workflow `.github/workflows/deploy.yml`, a ogni push su `main`, esegue i test, fa la
+build e pubblica `dist/` su GitHub Pages.
+
+Da impostare una volta sola su GitHub: **Settings → Pages → Build and deployment →
+Source: GitHub Actions**.
+
+L'app è su `https://luigifederico.github.io/wallet-app/`.
+
+---
+
+## Struttura
+
+```
+index.html              guscio dell'app (header, tab bar, contenitori)
+vite.config.js          build + generazione di sw.js con i file da mettere in cache
+public/                 copiati così come sono: manifest.webmanifest, icons/
+src/
+  main.js               punto di ingresso
+  state.js              stato dell'app (dati + stato dell'interfaccia)
+  azioni.js             modifiche ai dati, con annulla
+  persistenza.js        avvio, salvataggio su file / localStorage, scelta cartella
+  sw.js                 service worker (template, completato dalla build)
+  core/                 logica pura, senza DOM: costanti, formattazione, dati, calcoli
+  storage/              File System Access API e IndexedDB
+  export/               .json, .csv, .xlsx (zip minimale scritto a mano)
+  ui/                   render, eventi, toast, componenti condivisi
+    viste/              casa, storico, statistiche, impostazioni
+    sheet/              pannelli "aggiungi" e "dettaglio"
+  styles/               CSS: variabili colore, base, layout, componenti, viste, sheet
+tests/                  test di core/ ed export/
+```
 
 ---
 

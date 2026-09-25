@@ -1,0 +1,36 @@
+:root {
+  --font: "Manrope", system-ui, -apple-system, sans-serif;
+  --font-serif: "Instrument Serif", serif;
+
+  /* superfici */
+  --carta: #F7F3EC;          /* sfondo app */
+  --carta-scura: #EFE9DE;    /* pulsanti tenui */
+  --bianco: #fff;
+
+  /* testo */
+  --inchiostro: #16130F;
+  --testo-2: #5C554B;
+  --testo-3: #6F675C;
+  --etichetta: #7C7367;
+  --tab-spento: #A39A8C;
+  --sigla-spenta: #B3AA9C;
+
+  /* accenti */
+  --accento: #5B4BC4;
+  --verde: #2E7356;
+  --verde-chiaro: #4E9C74;
+  --rosso: #C0452B;
+  --oro: #A8863C;
+  --giallo: #C99A2E;
+  --grafico-in: #8FBBA6;
+  --grafico-out: #E0553A;
+
+  /* linee (inchiostro trasparente) */
+  --linea-06: rgba(22, 19, 15, .06);
+  --linea-08: rgba(22, 19, 15, .08);
+  --linea-09: rgba(22, 19, 15, .09);
+  --linea-10: rgba(22, 19, 15, .10);
+  --linea-12: rgba(22, 19, 15, .12);
+
+  --safe-bottom: env(safe-area-inset-bottom);
+}
