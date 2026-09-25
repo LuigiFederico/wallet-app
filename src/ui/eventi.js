@@ -143,6 +143,12 @@ export function collegaEventi() {
     renderSheets();
   });
 
+  // l'app va in background o si chiude con una casella budget ancora attiva: senza blur
+  // il 'change' non scatta e il valore scritto si perde
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && document.activeElement) document.activeElement.blur();
+  });
+
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && (S.bozza || S.dettaglio || S.conflitto)) chiudiSheet();
   });
