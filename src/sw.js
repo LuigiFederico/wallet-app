@@ -1,12 +1,16 @@
-const CACHE = 'butterflies-v1';
+/* Service worker — l'app funziona offline.
+   È un template: in build vite.config.js sostituisce i segnaposto
+   con l'hash della build e la lista dei file generati (JS/CSS con hash). */
+
+const CACHE = 'butterflies-__VERSIONE__';
 const ASSETS = [
   './',
   './index.html',
-  './app.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './icons/icon-maskable-512.png'
+  './icons/icon-maskable-512.png',
+  '__FILE_BUILD__'
 ];
 
 self.addEventListener('install', (e) => {

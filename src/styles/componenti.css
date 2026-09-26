@@ -1,0 +1,118 @@
+/* Elementi riusati in più viste. */
+
+.card { background: var(--bianco); border: 1px solid var(--linea-09); border-radius: 18px; }
+.lista { overflow: hidden; }
+
+/* tipografia */
+.lbl { font: 600 10.5px/1 var(--font); letter-spacing: .12em; text-transform: uppercase; color: var(--etichetta); }
+.h2 { font: 700 15px/1 var(--font); letter-spacing: -.01em; }
+.sect { font: 700 11px/1 var(--font); letter-spacing: .14em; text-transform: uppercase; color: var(--etichetta); margin: 26px 0 10px; }
+.sect--primo { margin-top: 2px; }
+.titolo-primo { margin-bottom: 12px; }
+.titolo-sez { margin: 26px 0 10px; }
+.nota { font: 500 12px/1.5 var(--font); color: var(--etichetta); margin: -4px 0 12px; }
+
+.is-verde { color: var(--verde); }
+.is-rosso { color: var(--rosso); }
+.is-accento { color: var(--accento); }
+.is-oro { color: var(--oro); }
+
+/* testata di sezione con link a destra */
+.sez-testa { display: flex; align-items: center; justify-content: space-between; }
+.sez-testa--budget { margin: 26px 0 12px; }
+.sez-testa--recenti { margin: 28px 0 10px; }
+.link-btn { font: 600 12.5px/1 var(--font); color: var(--accento); padding: 6px 0; }
+.link-btn--centro { display: block; width: 100%; min-height: 40px; margin-top: 4px; text-align: center; }
+
+/* pallini e avatar colorati per categoria */
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.dot--piccolo { width: 8px; height: 8px; }
+.dot--fuori { border: 1px solid #B9AF9F; } /* categoria esclusa dal portafoglio */
+.avatar {
+  width: 34px; height: 34px; border-radius: 11px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  font: 800 12px/1 var(--font); color: #fff;
+}
+.avatar--grande { width: 44px; height: 44px; border-radius: 13px; font: 800 13px/1 var(--font); }
+
+/* righe di elenco */
+.row { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border-bottom: 1px solid var(--linea-06); width: 100%; text-align: left; }
+.row:last-child { border-bottom: 0; }
+.riga-nome { flex: 1; font: 600 13.5px/1.2 var(--font); }
+
+.mov-testo { flex: 1; min-width: 0; }
+.mov-titolo { font: 600 13.5px/1.25 var(--font); }
+.mov-sub { font: 500 11.5px/1.3 var(--font); color: var(--etichetta); margin-top: 2px; }
+.mov-dx { text-align: right; flex: none; }
+.mov-importo { flex: none; font: 700 14px/1 var(--font); color: var(--inchiostro); }
+.mov-importo.is-entrata { color: var(--verde); }
+.mov-data { font: 500 11px/1 var(--font); color: var(--testo-3); margin-top: 4px; }
+
+/* grafico a ciambella */
+.donut { border-radius: 50%; flex: none; position: relative; }
+.donut-foro {
+  position: absolute; border-radius: 50%; background: var(--bianco);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.donut-foro .lbl { line-height: 1.3; text-align: center; }
+.donut-val { font: 400 24px/1.1 var(--font-serif); margin-top: 3px; }
+.donut--sm { width: 140px; height: 140px; }
+.donut--sm .donut-foro { inset: 25px; }
+.donut--sm .lbl { font-size: 9.5px; }
+.donut--lg { width: 190px; height: 190px; }
+.donut--lg .donut-foro { inset: 32px; }
+.donut--lg .lbl { font-size: 10px; }
+.donut--lg .donut-val { font-size: 28px; margin-top: 4px; }
+
+/* budget */
+.budget-lista { display: flex; flex-direction: column; gap: 12px; }
+.budget-lista--larga { gap: 14px; }
+.budget-testa { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+.budget-nome { flex: 1; min-width: 0; font: 600 13px/1.2 var(--font); }
+.budget-speso { flex: none; font: 700 12.5px/1 var(--font); }
+.budget-tetto { flex: none; font: 500 11.5px/1 var(--font); color: var(--etichetta); }
+.budget-resto { flex: none; font: 600 11.5px/1 var(--font); color: var(--testo-3); }
+.budget-resto.is-verde { color: var(--verde); }
+.budget-resto.is-rosso { color: var(--rosso); }
+
+.bar { height: 6px; border-radius: 99px; background: var(--linea-08); overflow: hidden; }
+.bar > i { display: block; height: 100%; border-radius: 99px; }
+.bar--alta { height: 8px; }
+
+/* chip dei filtri */
+.chips { display: flex; gap: 7px; overflow-x: auto; padding: 2px 0 16px; }
+.chips::-webkit-scrollbar { width: 0; height: 0; }
+.chip {
+  flex: none; white-space: nowrap; padding: 10px 15px; border-radius: 99px; min-height: 36px;
+  font: 700 12px/1 var(--font); border: 1px solid var(--linea-12); background: var(--bianco); color: var(--testo-2);
+}
+.chip[data-on="1"] { background: var(--inchiostro); color: var(--carta); border-color: var(--inchiostro); }
+
+/* controllo segmentato */
+.seg { display: flex; background: var(--linea-06); border-radius: 11px; padding: 3px; margin-bottom: 18px; }
+.seg > button { flex: 1; padding: 10px 0; border-radius: 9px; font: 700 13px/1 var(--font); color: var(--etichetta); min-height: 40px; }
+.seg > button[data-on="1"] { background: var(--bianco); color: var(--inchiostro); }
+
+/* pulsanti */
+.cta {
+  width: 100%; padding: 17px 0; border-radius: 15px; text-align: center; min-height: 52px;
+  font: 800 14.5px/1 var(--font); background: var(--inchiostro); color: var(--carta);
+}
+.cta[disabled] { background: var(--linea-10); color: var(--testo-3); }
+.cta--accento { background: var(--accento); color: #fff; }
+.btn-tenue { flex: 1; padding: 13px 0; border-radius: 11px; background: var(--carta-scura); font: 700 12.5px/1 var(--font); min-height: 44px; }
+.btn-bordo {
+  width: 100%; margin-top: 14px; padding: 13px 0; border-radius: 12px;
+  border: 1px solid var(--linea-12); font: 700 12.5px/1 var(--font); color: var(--testo-2);
+}
+
+/* campi del form */
+.field {
+  width: 100%; padding: 14px; border-radius: 13px; border: 1px solid var(--linea-12);
+  background: var(--bianco); font: 600 15px/1.1 var(--font); color: var(--inchiostro);
+}
+
+/* stati vuoti */
+.vuoto { text-align: center; padding: 40px 20px; color: var(--testo-3); font: 500 13.5px/1.6 var(--font); }
+.vuoto--alto { padding: 60px 20px; }
+.vuoto-breve { font: 500 13px/1.5 var(--font); color: var(--testo-3); }
