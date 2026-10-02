@@ -91,5 +91,6 @@ export function vistaImpostazioni() {
     + sezioneEsclusioni()
     + sezioneCategorie('uscita', 'Categorie di uscita')
     + sezioneCategorie('entrata', 'Categorie di entrata')
-    + '<div class="piede">Butterflies in the wallet<br>' + S.dati.movimenti.length + ' movimenti salvati</div>';
+    + '<div class="piede">Butterflies in the wallet<br>versione ' + __VERSIONE_APP__ + ' (' + __DATA_BUILD__ + ')<br>'
+    + S.dati.movimenti.length + ' movimenti salvati</div>';
 }
