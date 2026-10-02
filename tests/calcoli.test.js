@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { datiVuoti } from '../src/core/dati.js';
 import {
   colore, escluse, delMese, dellAnno, totale, uscitePerCategoria, riepilogo, daRimborsare, righeBudget,
-  budgetDi, meseBudgetPrecedente, totaleBudget, inAttesaDiRimborso, categoriaConRuolo, andamentoCategoria
+  budgetDi, meseBudgetPrecedente, totaleBudget, inAttesaDiRimborso, categoriaConRuolo, andamentoCategoria, mediaSpesaRecente, scalaAsse
 } from '../src/core/calcoli.js';
 
 const mv = (tipo, data, importo, categoria, extra) => ({ id: data + categoria, tipo, data, importo, categoria, ...extra });
@@ -150,4 +150,37 @@ test('andamentoCategoria: le entrate non hanno budget, un mese senza precedente 
   assert.deepEqual(a.mesi, [{ k: '2026-08', val: 0, bud: 0 }, { k: '2026-09', val: 2000, bud: 0 }]);
   assert.deepEqual([a.delta, a.precedente, a.conBudget, a.sforati], [2000, 0, 0, 0]);
   assert.equal(andamentoCategoria(datiVuoti(), 'uscita', 'Svago', '2026-09', '2026-09').mesi.length, 1);
+});
+
+test('mediaSpesaRecente: 3 mesi prima del mese, arrotondata ai 5 € superiori', () => {
+  const d = esempio();
+  d.movimenti.push(mv('uscita', '2026-01-10', 10, 'Svago'), mv('uscita', '2026-07-10', 645, 'Spesa settimanale'),
+    mv('uscita', '2026-07-11', 1.2, 'Svago'), mv('uscita', '2026-09-11', 1.2, 'Svago'));
+  const m = mediaSpesaRecente(d, '2026-10');
+  assert.equal(m.mesi, 3);
+  assert.equal(m.valori.Affitto, 535);              // (999 + 600) / 3 = 533
+  assert.equal(m.valori['Spesa settimanale'], 265); // (645 + 150) / 3 = 265 esatto
+  assert.equal(m.valori.Svago, 5);                  // 2,40 / 3 = 0,80 (gennaio è fuori dalla finestra)
+  assert.equal(m.valori['Da rimborsare'], 25);      // anche le categorie con un ruolo: 70 / 3
+  assert.equal(m.valori.Viaggi, 0);
+  assert.equal(Object.keys(m.valori).length, d.categorie.uscite.length);
+});
+
+test('mediaSpesaRecente: con poco storico usa i mesi disponibili, il mese stesso non conta', () => {
+  const d = esempio(); // primo movimento ad agosto
+  assert.deepEqual([mediaSpesaRecente(d, '2026-10').mesi, mediaSpesaRecente(d, '2026-10').valori.Affitto], [2, 800]);
+  const sett = mediaSpesaRecente(d, '2026-09');
+  assert.deepEqual([sett.mesi, sett.valori.Affitto, sett.valori['Spesa settimanale']], [1, 1000, 0]);
+  assert.equal(mediaSpesaRecente(d, '2026-08'), null);
+  assert.equal(mediaSpesaRecente(datiVuoti(), '2026-10'), null);
+});
+
+test('scalaAsse: passo tondo, al massimo 3 passi sopra lo zero', () => {
+  assert.deepEqual(scalaAsse(0), { top: 1, righe: [0, 1] });
+  assert.deepEqual(scalaAsse(92), { top: 100, righe: [0, 50, 100] });
+  assert.deepEqual(scalaAsse(620), { top: 750, righe: [0, 250, 500, 750] });
+  assert.deepEqual(scalaAsse(1840), { top: 2000, righe: [0, 1000, 2000] });
+  assert.deepEqual(scalaAsse(2100), { top: 3000, righe: [0, 1000, 2000, 3000] });
+  assert.deepEqual(scalaAsse(3100), { top: 4000, righe: [0, 2000, 4000] });
+  assert.deepEqual(scalaAsse(7), { top: 10, righe: [0, 5, 10] }); // niente 2,5: le etichette restano intere
 });

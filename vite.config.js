@@ -21,8 +21,15 @@ function serviceWorker() {
   };
 }
 
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
+
 export default defineConfig({
   // percorsi relativi: l'app funziona sotto https://<utente>.github.io/wallet-app/
   base: './',
-  plugins: [serviceWorker()]
+  plugins: [serviceWorker()],
+  // mostrate in fondo alle impostazioni; in sviluppo la data è quella di avvio del server
+  define: {
+    __VERSIONE_APP__: JSON.stringify(pkg.version),
+    __DATA_BUILD__: JSON.stringify(new Date().toISOString().slice(0, 10))
+  }
 });

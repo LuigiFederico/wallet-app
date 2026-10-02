@@ -2,9 +2,9 @@
 
 import { S } from './state.js';
 import { RUOLO_RIMBORSO } from './core/costanti.js';
-import { haRuolo, categoriaConRuolo } from './core/calcoli.js';
+import { haRuolo, categoriaConRuolo, mediaSpesaRecente } from './core/calcoli.js';
 import { normalizza, nuovoId, movimentoDaBozza, aggiungiCategoria, modificaCategoria, eliminaCategoria } from './core/dati.js';
-import { eurEsatto, oggiISO, parseImporto, spostaChiaveMese, meseInFrase } from './core/formato.js';
+import { eurEsatto, oggiISO, parseImporto, spostaChiaveMese, meseInFrase, periodoMedia } from './core/formato.js';
 import { salva } from './persistenza.js';
 import { render } from './ui/render.js';
 import { toast, nascondiToast } from './ui/toast.js';
@@ -77,6 +77,20 @@ export function copiaBudget(da) {
   S.dati.budget[S.mese] = Object.assign({}, S.dati.budget[da]);
   salva(); render();
   toast('Budget di ' + meseInFrase(da, S.mese) + ' copiato su ' + meseInFrase(S.mese, S.mese) + '.', annullaUltima);
+}
+
+/* Il budget del mese corrente dalla media della spesa recente: tutte le caselle,
+   oppure solo quelle vuote (assenti o a 0); dove la media è 0 restano vuote. */
+export function budgetDaMedia(soloVuote) {
+  const m = mediaSpesaRecente(S.dati, S.mese);
+  S.chiediMedia = null;
+  if (!m) return;
+  snapshot();
+  const bm = S.dati.budget[S.mese] || {};
+  if (soloVuote) Object.keys(m.valori).forEach((nome) => { if (!bm[nome] && m.valori[nome]) bm[nome] = m.valori[nome]; });
+  S.dati.budget[S.mese] = soloVuote ? bm : Object.assign({}, m.valori);
+  salva(); render();
+  toast('Budget ' + (soloVuote ? 'mancanti riempiti' : 'impostati') + ' con la media ' + periodoMedia(m.mesi) + '.', annullaUltima);
 }
 
 /* vale per la categoria con quel ruolo sia tra le uscite sia tra le entrate */

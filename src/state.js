@@ -12,11 +12,12 @@ export const S = {
   mese: oggiISO().slice(0, 7),
 
   // filtri delle viste
-  vista: 'mese',          // statistiche: 'mese' | 'anno' | 'categoria'
+  vista: 'mese',          // statistiche: 'mese' | 'anno' | 'categoria' | 'budget'
   catStats: null,         // statistiche, vista categoria: { tipo, nome } (null = la più spesa)
   filtro: 'Tutti',        // storico
   query: '',              // storico
   tutteCategorie: false,  // statistiche: mostra tutte le righe budget
+  chiediMedia: null,      // statistiche, vista budget: il mese ('AAAA-MM') ha già budget, si sceglie come applicare la media
 
   // salvataggio
   dirHandle: null,

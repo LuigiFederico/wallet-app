@@ -129,3 +129,33 @@ export function andamentoCategoria(dati, tipo, nome, mese, oggi) {
     sforati: mesi.filter((m) => m.bud > 0 && m.val > m.bud).length
   };
 }
+
+/* Media delle uscite per categoria nei 3 mesi prima di `mese`, senza risalire oltre il mese
+   del primo movimento. Arrotondata ai 5 € superiori; 0 per le categorie senza spesa.
+   null se prima di `mese` non c'è nessun mese di storico. */
+export function mediaSpesaRecente(dati, mese) {
+  const primo = dati.movimenti.reduce((min, m) => (m.data.slice(0, 7) < min ? m.data.slice(0, 7) : min), mese);
+  const finestra = [-3, -2, -1].map((d) => spostaChiaveMese(mese, d)).filter((k) => k >= primo);
+  if (!finestra.length) return null;
+  const catTot = uscitePerCategoria(dati.movimenti.filter((m) => finestra.indexOf(m.data.slice(0, 7)) >= 0));
+  const valori = {};
+  dati.categorie.uscite.forEach((c) => {
+    // sui centesimi: 265,00 resta 265 anche con gli errori dei float
+    valori[c.nome] = Math.ceil(Math.round(((catTot[c.nome] || 0) / finestra.length) * 100) / 500) * 5;
+  });
+  return { mesi: finestra.length, valori };
+}
+
+/* Scala dell'asse Y: il passo "tondo" più piccolo (1 · 2 · 2,5 · 5 × 10ⁿ, intero) che arriva
+   a `max` in al massimo 3 passi. top = la riga più alta, su cui si scalano le barre. */
+export function scalaAsse(max) {
+  const m = Math.max(max, 1);
+  for (let base = 1; ; base *= 10) {
+    for (const f of [1, 2, 2.5, 5]) {
+      const passo = f * base, n = Math.ceil(m / passo);
+      if (Number.isInteger(passo) && n <= 3) {
+        return { top: n * passo, righe: Array.from({ length: n + 1 }, (_, i) => i * passo) };
+      }
+    }
+  }
+}

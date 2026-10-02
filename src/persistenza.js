@@ -36,7 +36,7 @@ export async function salva() {
 }
 
 /* Dopo un riavvio Chrome chiede di nuovo il permesso sulla cartella già scelta
-   (con "Consenti a ogni visita" non lo chiede più). Se nel frattempo il file è stato
+   (sul computer, con "Consenti a ogni visita", non lo chiede più; su Android sì). Se nel frattempo il file è stato
    aggiornato altrove, vince il più recente. Ritorna true se si deve scrivere il file. */
 async function riattivaCartella(precedente) {
   if (!(await riattivaPermesso(S.dirHandle))) {
@@ -116,9 +116,40 @@ export async function scegliCartella() {
   }
 }
 
+/* Permesso attivo sulla cartella: vince il più recente tra il file e i dati del telefono. */
+async function allineaConFile(h) {
+  S.permessoCartella = true;
+  const dal = await leggiFile(h);
+  if (dal && !(ultimoSalvato > String(dal.aggiornato || ''))) {
+    S.dati = normalizza(dal);
+    ultimoSalvato = String(S.dati.aggiornato || '');
+    S.salvato = 'dal file';
+  } else if (ultimoSalvato) {
+    await salva(); // i dati di questo dispositivo sono più recenti del file
+  }
+}
+
+/* Chrome su Android non conserva il permesso tra un avvio e l'altro e lo può chiedere
+   solo dopo un gesto: lo chiedo al primo tocco, una volta per avvio. Il tocco fa anche
+   la sua azione normale. */
+function chiediAlPrimoTocco(h) {
+  const alAvvio = ultimoSalvato;
+  const tocco = async (e) => {
+    document.removeEventListener('click', tocco, true);
+    // questi pulsanti chiedono già il permesso, o un'altra cartella, da soli
+    if (e.target.closest('#riattiva, #pickDir')) return;
+    if (S.permessoCartella || S.dirHandle !== h || !(await riattivaPermesso(h))) return;
+    // il tocco ha già modificato i dati: il permesso l'ha chiesto anche salva(), che pensa al file
+    if (S.permessoCartella || ultimoSalvato !== alAvvio) return;
+    await allineaConFile(h);
+    render();
+  };
+  document.addEventListener('click', tocco, true);
+}
+
 /* All'avvio: prima localStorage, poi il file se il permesso sulla cartella è ancora valido
    (vince il più recente). Senza permesso la cartella resta collegata e il permesso
-   viene richiesto al primo salvataggio. */
+   viene richiesto al primo tocco o al primo salvataggio. */
 export async function avvia() {
   try { S.bannerNascosto = localStorage.getItem(LS_BANNER) === '1'; } catch (e) {}
   try {
@@ -136,17 +167,10 @@ export async function avvia() {
       if (h) {
         S.dirHandle = h;
         if (await permessoAttivo(h)) {
-          S.permessoCartella = true;
-          const dal = await leggiFile(h);
-          if (dal && !(ultimoSalvato > String(dal.aggiornato || ''))) {
-            S.dati = normalizza(dal);
-            ultimoSalvato = String(S.dati.aggiornato || '');
-            S.salvato = 'dal file';
-          } else if (ultimoSalvato) {
-            await salva(); // i dati di questo dispositivo sono più recenti del file
-          }
+          await allineaConFile(h);
         } else {
           S.salvato = 'permesso da riattivare';
+          chiediAlPrimoTocco(h);
         }
       }
     } catch (e) {}

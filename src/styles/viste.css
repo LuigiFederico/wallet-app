@@ -76,7 +76,14 @@
 .copia-azioni .btn-tenue { flex: none; padding: 0 16px; min-height: 48px; border-radius: 13px; font-size: 13px; }
 
 .grafico { padding: 16px 14px 12px; }
-.grafico-barre { display: flex; align-items: flex-end; gap: 5px; }
+/* asse Y: colonna delle etichette a sinistra, righe guida alte quanto le colonne (92px) */
+.grafico-area { display: flex; }
+.grafico-asse { position: relative; flex: none; width: 26px; height: 92px; margin-right: 4px; }
+.grafico-asse > span { position: absolute; right: 0; transform: translateY(50%); font: 600 9px/1 var(--font); color: var(--etichetta); font-variant-numeric: tabular-nums; }
+.grafico-corpo { position: relative; flex: 1; min-width: 0; }
+.grafico-righe { position: absolute; top: 0; left: 0; right: 0; height: 92px; pointer-events: none; }
+.grafico-righe > i { position: absolute; left: 0; right: 0; height: 1px; background: var(--linea-08); }
+.grafico-barre { position: relative; display: flex; align-items: flex-end; gap: 5px; }
 .grafico-mese { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
 .grafico-colonne { width: 100%; height: 92px; display: flex; align-items: flex-end; gap: 2px; }
 .grafico-colonne > i { flex: 1; border-radius: 3px 3px 0 0; }
@@ -128,6 +135,12 @@
 .copia-riga .riga-nome { color: var(--accento); font-weight: 700; }
 .riga-freccia { flex: none; display: flex; color: var(--testo-3); }
 .copia-riga-info { flex: none; font: 600 11.5px/1 var(--font); color: var(--etichetta); }
+/* vista Budget: il mese ha già budget, come applicare la media */
+.media-scelta { flex-direction: column; align-items: stretch; gap: 10px; }
+.media-testo { font: 600 12.5px/1.4 var(--font); color: var(--testo-2); }
+.media-azioni { display: flex; align-items: center; gap: 8px; }
+.media-azioni .btn-tenue { flex: 1; min-height: 40px; border-radius: 11px; font-size: 12.5px; }
+.media-azioni .link-btn { flex: none; padding: 0 6px; }
 
 .switch { width: 44px; height: 26px; border-radius: 99px; position: relative; flex: none; background: rgba(22, 19, 15, .16); }
 .switch[data-on="1"] { background: var(--accento); }

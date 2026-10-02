@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   isoData, chiaveMese, nomeMese, nomeMeseBreve, giorniNelMese, spostaChiaveMese, dataBreve, etichettaData,
-  eur, eurEsatto, eurSegno, percentuale, parseImporto, esc, sigla, ieriISO, orarioBreve, quando, meseInFrase
+  eur, eurEsatto, eurSegno, percentuale, parseImporto, esc, sigla, ieriISO, orarioBreve, quando, meseInFrase, etichettaAsse, periodoMedia
 } from '../src/core/formato.js';
 
 // Intl usa lo spazio unificatore tra importo e simbolo
@@ -85,4 +85,9 @@ test('esc e sigla', () => {
   assert.equal(sigla('Spesa settimanale'), 'SS');
   assert.equal(sigla('Tasse/Commissioni'), 'TC');
   assert.equal(sigla('Affitto'), 'AF');
+});
+
+test('etichettaAsse e periodoMedia', () => {
+  assert.deepEqual([0, 50, 250, 1000, 1500, 2500, 12000].map(etichettaAsse), ['0', '50', '250', '1k', '1,5k', '2,5k', '12k']);
+  assert.deepEqual([1, 2, 3].map(periodoMedia), ['dell\'ultimo mese', 'degli ultimi 2 mesi', 'degli ultimi 3 mesi']);
 });

@@ -31,6 +31,10 @@ export function meseInFrase(mese, riferimento) {
   const m = MESI[indiceMese(mese)].toLowerCase();
   return mese.slice(0, 4) === riferimento.slice(0, 4) ? m : m + ' ' + mese.slice(0, 4);
 }
+/* il periodo della media del budget: 'dell'ultimo mese', 'degli ultimi 3 mesi' */
+export function periodoMedia(mesi) {
+  return mesi === 1 ? 'dell\'ultimo mese' : 'degli ultimi ' + mesi + ' mesi';
+}
 export function giorniNelMese(mese) {
   return new Date(parseInt(mese.slice(0, 4), 10), parseInt(mese.slice(5), 10), 0).getDate();
 }
@@ -63,6 +67,10 @@ export function eurEsatto(n) {
 /* importo con segno: '−12,50 €' / '+12,50 €' */
 export function eurSegno(n) {
   return (n >= 0 ? '+' : '−') + eur(Math.abs(n));
+}
+/* etichetta dell'asse Y: '0', '250', '1k', '1,5k' */
+export function etichettaAsse(v) {
+  return v < 1000 ? String(v) : String(v / 1000).replace('.', ',') + 'k';
 }
 export function percentuale(parte, tot) {
   return tot ? Math.round((parte / tot) * 100) + '%' : '—';

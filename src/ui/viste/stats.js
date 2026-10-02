@@ -1,13 +1,13 @@
-/* Statistiche: indicatori, uscite per categoria, andamento annuale, budget; vista Categoria. */
+/* Statistiche: indicatori, uscite per categoria, andamento annuale, budget; viste Categoria e Budget. */
 
 import { S } from '../../state.js';
-import { esc, eur, eurSegno, chiaveMese, percentuale, indiceMese, meseInFrase, oggiISO, spostaChiaveMese } from '../../core/formato.js';
+import { esc, eur, eurSegno, chiaveMese, percentuale, indiceMese, meseInFrase, nomeMese, oggiISO, spostaChiaveMese, periodoMedia, etichettaAsse } from '../../core/formato.js';
 import { MESI, SIGLE, COLORE_FUORI } from '../../core/costanti.js';
 import {
   delMese, dellAnno, totale, riepilogo, righeBudget, righeConBudget, budgetDi, totaleBudget, meseBudgetPrecedente, daRimborsare,
-  categorie as categorieDi, uscitePerCategoria, andamentoCategoria
+  categorie as categorieDi, uscitePerCategoria, andamentoCategoria, mediaSpesaRecente, scalaAsse
 } from '../../core/calcoli.js';
-import { ciambella, fetteUscite, testataSezione } from '../componenti.js';
+import { ciambella, fetteUscite } from '../componenti.js';
 
 function tile(etichetta, valore, classe) {
   return '<div class="card tile"><div class="lbl">' + etichetta + '</div><div class="num tile-val' + (classe ? ' ' + classe : '') + '">' + valore + '</div></div>';
@@ -47,24 +47,36 @@ function perCategoria(r, tot) {
     + '</div></div>';
 }
 
+/* asse Y: le etichette stanno in una colonna a sinistra, le righe dietro le barre */
+function posizioneAsse(scala, v) {
+  return ((v / scala.top) * 100).toFixed(1) + '%';
+}
+function etichetteAsse(scala) {
+  return '<div class="grafico-asse">' + scala.righe.map((v) => '<span style="bottom:' + posizioneAsse(scala, v) + '">' + etichettaAsse(v) + '</span>').join('') + '</div>';
+}
+function righeGuida(scala) {
+  return '<div class="grafico-righe">' + scala.righe.map((v) => '<i style="bottom:' + posizioneAsse(scala, v) + '"></i>').join('') + '</div>';
+}
+
 function andamentoAnnuale(anno) {
   const mesi = MESI.map((_, i) => {
     const k = chiaveMese(anno, i);
     const mm = delMese(S.dati.movimenti, k);
     return { k, sigla: SIGLE[i], inn: totale(S.dati, mm, 'entrata', true), out: totale(S.dati, mm, 'uscita', true) };
   });
-  const max = Math.max(1, ...mesi.map((m) => Math.max(m.inn, m.out)));
-  const altezza = (v) => ((v / max) * 100).toFixed(1) + '%';
+  const scala = scalaAsse(Math.max(...mesi.map((m) => Math.max(m.inn, m.out))));
+  const altezza = (v) => ((v / scala.top) * 100).toFixed(1) + '%';
 
   return '<div class="h2 titolo-sez">Entrate e uscite, mese per mese</div>'
     + '<div class="card grafico">'
+    + '<div class="grafico-area">' + etichetteAsse(scala) + '<div class="grafico-corpo">' + righeGuida(scala)
     + '<div class="grafico-barre">'
     + mesi.map((m) => '<button class="grafico-mese" data-mese="' + m.k + '">'
         + '<div class="grafico-colonne">'
         + '<i class="grafico-in" style="height:' + altezza(m.inn) + '"></i>'
         + '<i class="grafico-out" style="height:' + altezza(m.out) + '"></i></div>'
         + '<div class="grafico-sigla" data-on="' + (m.k === S.mese ? 1 : 0) + '">' + m.sigla + '</div></button>').join('')
-    + '</div>'
+    + '</div></div></div>'
     + '<div class="grafico-legenda">'
     + '<div class="grafico-voce"><i class="grafico-in"></i>Entrate</div>'
     + '<div class="grafico-voce"><i class="grafico-out"></i>Uscite</div>'
@@ -98,11 +110,12 @@ function proponiCopia(da, catTot) {
     + (anteprima.length > 4 ? '<div class="copia-altre">+ altre ' + categorie(anteprima.length - 3) + '</div>'
       : anteprima.length === 4 ? '<div class="copia-altre">+ un\'altra categoria</div>' : '') + '</div>'
     + '<div class="copia-azioni"><button class="cta" data-bud-copia="' + da + '">Copia da ' + nomeDa + '</button>'
-    + '<button class="btn-tenue" data-go="impostazioni">Imposta a mano</button></div></div>';
+    + '<button class="btn-tenue" data-vista="budget">Imposta a mano</button></div></div>';
 }
 
 function spesoVsPrevisto(catTot, perAnno) {
-  const testa = testataSezione('Speso vs previsto', 'impostazioni', 'Modifica budget', 'sez-testa--budget');
+  const testa = '<div class="sez-testa sez-testa--budget"><div class="h2">Speso vs previsto</div>'
+    + '<button data-vista="budget" class="link-btn">Modifica budget</button></div>';
   const vuoto = !totaleBudget(budgetDi(S.dati, S.mese)).categorie;
   const da = !perAnno && vuoto && meseBudgetPrecedente(S.dati, S.mese);
   if (da) return testa + proponiCopia(da, catTot);
@@ -159,10 +172,12 @@ function indicatoriCategoria(a, uscita) {
 
 /* una barra per mese; la tacca è il budget del mese. Si scorre in orizzontale se i mesi sono tanti. */
 function graficoCategoria(a, coloreCat, uscita) {
-  const max = Math.max(1, ...a.mesi.map((m) => Math.max(m.val, m.bud)));
-  const pct = (v) => ((v / max) * 100).toFixed(1) + '%';
+  const scala = scalaAsse(Math.max(...a.mesi.map((m) => Math.max(m.val, m.bud))));
+  const pct = (v) => posizioneAsse(scala, v);
+  // le etichette dell'asse restano ferme: scorrono solo le barre
   return '<div class="h2 titolo-sez">Mese per mese</div>'
     + '<div class="card grafico">'
+    + '<div class="grafico-area">' + etichetteAsse(scala) + '<div class="grafico-corpo">' + righeGuida(scala)
     + '<div class="grafico-scorri"><div class="grafico-barre grafico-barre--cat">'
     + a.mesi.map((m, i) => '<button class="grafico-mese" data-mese="' + m.k + '">'
         + '<div class="grafico-colonne">'
@@ -170,7 +185,7 @@ function graficoCategoria(a, coloreCat, uscita) {
         + (m.bud ? '<b class="grafico-tacca" style="bottom:' + pct(m.bud) + '"></b>' : '') + '</div>'
         + '<div class="grafico-sigla" data-on="' + (m.k === S.mese ? 1 : 0) + '">' + SIGLE[indiceMese(m.k)] + '</div>'
         + '<div class="grafico-anno">' + (i === 0 || m.k.slice(5) === '01' ? m.k.slice(0, 4) : '') + '</div></button>').join('')
-    + '</div></div>'
+    + '</div></div></div></div>'
     + '<div class="grafico-legenda">'
     + '<div class="grafico-voce"><i style="background:' + coloreCat + '"></i>' + (uscita ? 'Speso' : 'Incassato') + '</div>'
     + (uscita ? '<div class="grafico-voce"><i class="grafico-tacca-voce"></i>Budget</div><div class="grafico-voce"><i class="grafico-oltre"></i>Oltre il budget</div>' : '')
@@ -186,14 +201,58 @@ function vistaCategoria() {
     + graficoCategoria(a, c.colore, uscita);
 }
 
+/* Vista Budget: una casella per categoria di uscita del mese in testata. */
+
+/* mese senza budget: si riparte da quello dell'ultimo mese che ne ha uno */
+function copiaBudget() {
+  const da = !totaleBudget(budgetDi(S.dati, S.mese)).categorie && meseBudgetPrecedente(S.dati, S.mese);
+  if (!da) return '';
+  const t = totaleBudget(S.dati.budget[da]);
+  return '<button class="row copia-riga" data-bud-copia="' + da + '"><div class="riga-nome">Copia da ' + meseInFrase(da, S.mese) + '</div>'
+    + '<div class="copia-riga-info">' + t.categorie + (t.categorie === 1 ? ' categoria' : ' categorie') + ' · ' + eur(t.totale) + '</div></button>';
+}
+
+/* la media dei mesi precedenti: si applica subito, oppure se il mese ha già budget si sceglie come */
+function usaMedia() {
+  const m = mediaSpesaRecente(S.dati, S.mese);
+  if (!m) return '';
+  const periodo = periodoMedia(m.mesi), gia = totaleBudget(budgetDi(S.dati, S.mese)).categorie;
+  if (gia && S.chiediMedia === S.mese) {
+    return '<div class="row media-scelta"><div class="media-testo">' + (gia === 1 ? 'C\'è già un budget' : 'Ci sono già ' + gia + ' budget')
+      + '. Con la media ' + periodo + ':</div>'
+      + '<div class="media-azioni"><button class="btn-tenue" data-bud-media="tutti">Sostituisci tutti</button>'
+      + '<button class="btn-tenue" data-bud-media="vuote">Solo le vuote</button>'
+      + '<button class="link-btn" data-bud-media="annulla">Annulla</button></div></div>';
+  }
+  const t = totaleBudget(m.valori);
+  return '<button class="row copia-riga" data-bud-media="' + (gia ? 'chiedi' : 'tutti') + '"><div class="riga-nome">Usa la media ' + periodo + '</div>'
+    + '<div class="copia-riga-info">' + categorie(t.categorie) + ' · ' + eur(t.totale) + '</div></button>';
+}
+
+function vistaBudget() {
+  const righe = righeBudget(S.dati, S.mese, uscitePerCategoria(delMese(S.dati.movimenti, S.mese)));
+  return '<div class="sect sect--primo">Budget · ' + nomeMese(S.mese) + '</div>'
+    + '<div class="card lista">'
+    + copiaBudget()
+    + usaMedia()
+    + righe.map((b) =>
+        '<div class="row"><i class="dot" style="background:' + b.colore + '"></i>'
+        + '<div class="ell budget-nome">' + esc(b.nome) + '</div>'
+        + '<div class="bud-box"><span>€</span>'
+        + '<input class="bud num" data-cat="' + esc(b.nome) + '" value="' + b.bud + '" inputmode="decimal"></div></div>').join('')
+    + '</div>';
+}
+
 export function vistaStats() {
   const anno = S.mese.slice(0, 4);
   const perAnno = S.vista === 'anno';
   const seg = '<div class="seg">'
     + '<button data-vista="mese" data-on="' + (S.vista === 'mese' ? 1 : 0) + '">Mese</button>'
     + '<button data-vista="anno" data-on="' + (perAnno ? 1 : 0) + '">Anno ' + anno + '</button>'
-    + '<button data-vista="categoria" data-on="' + (S.vista === 'categoria' ? 1 : 0) + '">Categoria</button></div>';
+    + '<button data-vista="categoria" data-on="' + (S.vista === 'categoria' ? 1 : 0) + '">Categoria</button>'
+    + '<button data-vista="budget" data-on="' + (S.vista === 'budget' ? 1 : 0) + '">Budget</button></div>';
   if (S.vista === 'categoria') return seg + vistaCategoria();
+  if (S.vista === 'budget') return seg + vistaBudget();
 
   const movs = perAnno ? dellAnno(S.dati.movimenti, anno) : delMese(S.dati.movimenti, S.mese);
   const r = riepilogo(S.dati, movs);

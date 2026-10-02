@@ -7,7 +7,7 @@ import { PALETTE } from '../core/costanti.js';
 import { bozzaPronta, movimentoDaBozza, bozzaDaMovimento, usoCategoria } from '../core/dati.js';
 import { categorie, colore } from '../core/calcoli.js';
 import {
-  aggiungi, modifica, elimina, duplica, toggleRimborso, setBudget, copiaBudget, toggleEsclusione,
+  aggiungi, modifica, elimina, duplica, toggleRimborso, setBudget, copiaBudget, budgetDaMedia, toggleEsclusione,
   spostaMese, meseCorrente, importaJson, salvaCategoria, rimuoviCategoria
 } from '../azioni.js';
 import { scegliCartella, riattivaAccesso, confermaVersione } from '../persistenza.js';
@@ -91,10 +91,20 @@ const CLICK_CONTENUTO = [
   ['[data-go]', (el) => vaiA(el.dataset.go)],
   ['[data-det]', (el) => { S.dettaglio = S.dati.movimenti.find((m) => m.id === el.dataset.det) || null; apriSheet(); }],
   ['[data-filtro]', (el) => { S.filtro = el.dataset.filtro; render(); }],
-  ['[data-vista]', (el) => { S.vista = el.dataset.vista; render(); }],
+  // «Modifica budget» è in fondo alla vista Mese: la vista nuova si apre dall'inizio
+  ['[data-vista]', (el) => {
+    const cambia = S.vista !== el.dataset.vista;
+    S.vista = el.dataset.vista; S.chiediMedia = null; render();
+    if (cambia) document.getElementById('scroll').scrollTop = 0;
+  }],
   ['[data-mese]', (el) => { S.mese = el.dataset.mese; if (S.vista !== 'categoria') S.vista = 'mese'; render(); }],
   ['[data-escl]', (el) => toggleEsclusione(el.dataset.escl)],
   ['[data-bud-copia]', (el) => copiaBudget(el.dataset.budCopia)],
+  ['[data-bud-media]', (el) => {
+    const a = el.dataset.budMedia;
+    if (a === 'tutti' || a === 'vuote') { budgetDaMedia(a === 'vuote'); return; }
+    S.chiediMedia = a === 'chiedi' ? S.mese : null; render();
+  }],
   ['[data-cat-nuova]', (el) => apriCategoria(el.dataset.catNuova, null)],
   ['[data-cat-mod]', (el) => apriCategoria(el.dataset.catMod, el.dataset.nome)],
   ['#toggleTutte', () => { S.tutteCategorie = !S.tutteCategorie; render(); }],
