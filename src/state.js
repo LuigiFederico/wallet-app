@@ -17,6 +17,7 @@ export const S = {
   filtro: 'Tutti',        // storico
   query: '',              // storico
   tutteCategorie: false,  // statistiche: mostra tutte le righe budget
+  chiediMedia: null,      // statistiche, vista budget: il mese ('AAAA-MM') ha già budget, si sceglie come applicare la media
 
   // salvataggio
   dirHandle: null,

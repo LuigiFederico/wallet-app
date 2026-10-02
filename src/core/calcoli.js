@@ -129,3 +129,19 @@ export function andamentoCategoria(dati, tipo, nome, mese, oggi) {
     sforati: mesi.filter((m) => m.bud > 0 && m.val > m.bud).length
   };
 }
+
+/* Media delle uscite per categoria nei 3 mesi prima di `mese`, senza risalire oltre il mese
+   del primo movimento. Arrotondata ai 5 € superiori; 0 per le categorie senza spesa.
+   null se prima di `mese` non c'è nessun mese di storico. */
+export function mediaSpesaRecente(dati, mese) {
+  const primo = dati.movimenti.reduce((min, m) => (m.data.slice(0, 7) < min ? m.data.slice(0, 7) : min), mese);
+  const finestra = [-3, -2, -1].map((d) => spostaChiaveMese(mese, d)).filter((k) => k >= primo);
+  if (!finestra.length) return null;
+  const catTot = uscitePerCategoria(dati.movimenti.filter((m) => finestra.indexOf(m.data.slice(0, 7)) >= 0));
+  const valori = {};
+  dati.categorie.uscite.forEach((c) => {
+    // sui centesimi: 265,00 resta 265 anche con gli errori dei float
+    valori[c.nome] = Math.ceil(Math.round(((catTot[c.nome] || 0) / finestra.length) * 100) / 500) * 5;
+  });
+  return { mesi: finestra.length, valori };
+}

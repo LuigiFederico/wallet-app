@@ -1,11 +1,11 @@
 /* Statistiche: indicatori, uscite per categoria, andamento annuale, budget; viste Categoria e Budget. */
 
 import { S } from '../../state.js';
-import { esc, eur, eurSegno, chiaveMese, percentuale, indiceMese, meseInFrase, nomeMese, oggiISO, spostaChiaveMese } from '../../core/formato.js';
+import { esc, eur, eurSegno, chiaveMese, percentuale, indiceMese, meseInFrase, nomeMese, oggiISO, spostaChiaveMese, periodoMedia } from '../../core/formato.js';
 import { MESI, SIGLE, COLORE_FUORI } from '../../core/costanti.js';
 import {
   delMese, dellAnno, totale, riepilogo, righeBudget, righeConBudget, budgetDi, totaleBudget, meseBudgetPrecedente, daRimborsare,
-  categorie as categorieDi, uscitePerCategoria, andamentoCategoria
+  categorie as categorieDi, uscitePerCategoria, andamentoCategoria, mediaSpesaRecente
 } from '../../core/calcoli.js';
 import { ciambella, fetteUscite } from '../componenti.js';
 
@@ -198,11 +198,29 @@ function copiaBudget() {
     + '<div class="copia-riga-info">' + t.categorie + (t.categorie === 1 ? ' categoria' : ' categorie') + ' · ' + eur(t.totale) + '</div></button>';
 }
 
+/* la media dei mesi precedenti: si applica subito, oppure se il mese ha già budget si sceglie come */
+function usaMedia() {
+  const m = mediaSpesaRecente(S.dati, S.mese);
+  if (!m) return '';
+  const periodo = periodoMedia(m.mesi), gia = totaleBudget(budgetDi(S.dati, S.mese)).categorie;
+  if (gia && S.chiediMedia === S.mese) {
+    return '<div class="row media-scelta"><div class="media-testo">' + (gia === 1 ? 'C\'è già un budget' : 'Ci sono già ' + gia + ' budget')
+      + '. Con la media ' + periodo + ':</div>'
+      + '<div class="media-azioni"><button class="btn-tenue" data-bud-media="tutti">Sostituisci tutti</button>'
+      + '<button class="btn-tenue" data-bud-media="vuote">Solo le vuote</button>'
+      + '<button class="link-btn" data-bud-media="annulla">Annulla</button></div></div>';
+  }
+  const t = totaleBudget(m.valori);
+  return '<button class="row copia-riga" data-bud-media="' + (gia ? 'chiedi' : 'tutti') + '"><div class="riga-nome">Usa la media ' + periodo + '</div>'
+    + '<div class="copia-riga-info">' + categorie(t.categorie) + ' · ' + eur(t.totale) + '</div></button>';
+}
+
 function vistaBudget() {
   const righe = righeBudget(S.dati, S.mese, uscitePerCategoria(delMese(S.dati.movimenti, S.mese)));
   return '<div class="sect sect--primo">Budget · ' + nomeMese(S.mese) + '</div>'
     + '<div class="card lista">'
     + copiaBudget()
+    + usaMedia()
     + righe.map((b) =>
         '<div class="row"><i class="dot" style="background:' + b.colore + '"></i>'
         + '<div class="ell budget-nome">' + esc(b.nome) + '</div>'
