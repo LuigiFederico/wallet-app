@@ -1,9 +1,9 @@
-/* Impostazioni: file collegato ed export, esclusioni dal portafoglio, categorie, budget del mese. */
+/* Impostazioni: file collegato ed export, esclusioni dal portafoglio, categorie. */
 
 import { S } from '../../state.js';
-import { esc, eur, nomeMese, quando, meseInFrase } from '../../core/formato.js';
+import { esc, quando } from '../../core/formato.js';
 import { FILENAME, ESCLUDIBILI } from '../../core/costanti.js';
-import { delMese, escluse, uscitePerCategoria, righeBudget, budgetDi, totaleBudget, meseBudgetPrecedente, categoriaConRuolo, categorie } from '../../core/calcoli.js';
+import { escluse, categoriaConRuolo, categorie } from '../../core/calcoli.js';
 import { supportaFS } from '../../storage/file.js';
 
 const ICONA_FILE = '<svg width="17" height="20" viewBox="0 0 18 22" fill="none"><path d="M2 1.8h9l5 5v13.4a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2.8a1 1 0 0 1 1-1Z" stroke="#5B4BC4" stroke-width="1.6"/><path d="M11 1.8V7h5" stroke="#5B4BC4" stroke-width="1.6"/></svg>';
@@ -86,33 +86,10 @@ function sezioneCategorie(tipo, titolo) {
     + '</div>';
 }
 
-/* mese senza budget: si riparte da quello dell'ultimo mese che ne ha uno */
-function copiaBudget() {
-  const da = !totaleBudget(budgetDi(S.dati, S.mese)).categorie && meseBudgetPrecedente(S.dati, S.mese);
-  if (!da) return '';
-  const t = totaleBudget(S.dati.budget[da]);
-  return '<button class="row copia-riga" data-bud-copia="' + da + '"><div class="riga-nome">Copia da ' + meseInFrase(da, S.mese) + '</div>'
-    + '<div class="copia-riga-info">' + t.categorie + (t.categorie === 1 ? ' categoria' : ' categorie') + ' · ' + eur(t.totale) + '</div></button>';
-}
-
-function sezioneBudget() {
-  const righe = righeBudget(S.dati, S.mese, uscitePerCategoria(delMese(S.dati.movimenti, S.mese)));
-  return '<div class="sect">Budget · ' + nomeMese(S.mese) + '</div>'
-    + '<div class="card lista">'
-    + copiaBudget()
-    + righe.map((b) =>
-        '<div class="row"><i class="dot" style="background:' + b.colore + '"></i>'
-        + '<div class="ell budget-nome">' + esc(b.nome) + '</div>'
-        + '<div class="bud-box"><span>€</span>'
-        + '<input class="bud num" data-cat="' + esc(b.nome) + '" value="' + b.bud + '" inputmode="decimal"></div></div>').join('')
-    + '</div>';
-}
-
 export function vistaImpostazioni() {
   return sezioneFile()
     + sezioneEsclusioni()
     + sezioneCategorie('uscita', 'Categorie di uscita')
     + sezioneCategorie('entrata', 'Categorie di entrata')
-    + sezioneBudget()
     + '<div class="piede">Butterflies in the wallet<br>' + S.dati.movimenti.length + ' movimenti salvati</div>';
 }

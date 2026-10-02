@@ -91,7 +91,12 @@ const CLICK_CONTENUTO = [
   ['[data-go]', (el) => vaiA(el.dataset.go)],
   ['[data-det]', (el) => { S.dettaglio = S.dati.movimenti.find((m) => m.id === el.dataset.det) || null; apriSheet(); }],
   ['[data-filtro]', (el) => { S.filtro = el.dataset.filtro; render(); }],
-  ['[data-vista]', (el) => { S.vista = el.dataset.vista; render(); }],
+  // «Modifica budget» è in fondo alla vista Mese: la vista nuova si apre dall'inizio
+  ['[data-vista]', (el) => {
+    const cambia = S.vista !== el.dataset.vista;
+    S.vista = el.dataset.vista; render();
+    if (cambia) document.getElementById('scroll').scrollTop = 0;
+  }],
   ['[data-mese]', (el) => { S.mese = el.dataset.mese; if (S.vista !== 'categoria') S.vista = 'mese'; render(); }],
   ['[data-escl]', (el) => toggleEsclusione(el.dataset.escl)],
   ['[data-bud-copia]', (el) => copiaBudget(el.dataset.budCopia)],

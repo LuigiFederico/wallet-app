@@ -1,13 +1,13 @@
-/* Statistiche: indicatori, uscite per categoria, andamento annuale, budget; vista Categoria. */
+/* Statistiche: indicatori, uscite per categoria, andamento annuale, budget; viste Categoria e Budget. */
 
 import { S } from '../../state.js';
-import { esc, eur, eurSegno, chiaveMese, percentuale, indiceMese, meseInFrase, oggiISO, spostaChiaveMese } from '../../core/formato.js';
+import { esc, eur, eurSegno, chiaveMese, percentuale, indiceMese, meseInFrase, nomeMese, oggiISO, spostaChiaveMese } from '../../core/formato.js';
 import { MESI, SIGLE, COLORE_FUORI } from '../../core/costanti.js';
 import {
   delMese, dellAnno, totale, riepilogo, righeBudget, righeConBudget, budgetDi, totaleBudget, meseBudgetPrecedente, daRimborsare,
   categorie as categorieDi, uscitePerCategoria, andamentoCategoria
 } from '../../core/calcoli.js';
-import { ciambella, fetteUscite, testataSezione } from '../componenti.js';
+import { ciambella, fetteUscite } from '../componenti.js';
 
 function tile(etichetta, valore, classe) {
   return '<div class="card tile"><div class="lbl">' + etichetta + '</div><div class="num tile-val' + (classe ? ' ' + classe : '') + '">' + valore + '</div></div>';
@@ -98,11 +98,12 @@ function proponiCopia(da, catTot) {
     + (anteprima.length > 4 ? '<div class="copia-altre">+ altre ' + categorie(anteprima.length - 3) + '</div>'
       : anteprima.length === 4 ? '<div class="copia-altre">+ un\'altra categoria</div>' : '') + '</div>'
     + '<div class="copia-azioni"><button class="cta" data-bud-copia="' + da + '">Copia da ' + nomeDa + '</button>'
-    + '<button class="btn-tenue" data-go="impostazioni">Imposta a mano</button></div></div>';
+    + '<button class="btn-tenue" data-vista="budget">Imposta a mano</button></div></div>';
 }
 
 function spesoVsPrevisto(catTot, perAnno) {
-  const testa = testataSezione('Speso vs previsto', 'impostazioni', 'Modifica budget', 'sez-testa--budget');
+  const testa = '<div class="sez-testa sez-testa--budget"><div class="h2">Speso vs previsto</div>'
+    + '<button data-vista="budget" class="link-btn">Modifica budget</button></div>';
   const vuoto = !totaleBudget(budgetDi(S.dati, S.mese)).categorie;
   const da = !perAnno && vuoto && meseBudgetPrecedente(S.dati, S.mese);
   if (da) return testa + proponiCopia(da, catTot);
@@ -186,14 +187,40 @@ function vistaCategoria() {
     + graficoCategoria(a, c.colore, uscita);
 }
 
+/* Vista Budget: una casella per categoria di uscita del mese in testata. */
+
+/* mese senza budget: si riparte da quello dell'ultimo mese che ne ha uno */
+function copiaBudget() {
+  const da = !totaleBudget(budgetDi(S.dati, S.mese)).categorie && meseBudgetPrecedente(S.dati, S.mese);
+  if (!da) return '';
+  const t = totaleBudget(S.dati.budget[da]);
+  return '<button class="row copia-riga" data-bud-copia="' + da + '"><div class="riga-nome">Copia da ' + meseInFrase(da, S.mese) + '</div>'
+    + '<div class="copia-riga-info">' + t.categorie + (t.categorie === 1 ? ' categoria' : ' categorie') + ' · ' + eur(t.totale) + '</div></button>';
+}
+
+function vistaBudget() {
+  const righe = righeBudget(S.dati, S.mese, uscitePerCategoria(delMese(S.dati.movimenti, S.mese)));
+  return '<div class="sect sect--primo">Budget · ' + nomeMese(S.mese) + '</div>'
+    + '<div class="card lista">'
+    + copiaBudget()
+    + righe.map((b) =>
+        '<div class="row"><i class="dot" style="background:' + b.colore + '"></i>'
+        + '<div class="ell budget-nome">' + esc(b.nome) + '</div>'
+        + '<div class="bud-box"><span>€</span>'
+        + '<input class="bud num" data-cat="' + esc(b.nome) + '" value="' + b.bud + '" inputmode="decimal"></div></div>').join('')
+    + '</div>';
+}
+
 export function vistaStats() {
   const anno = S.mese.slice(0, 4);
   const perAnno = S.vista === 'anno';
   const seg = '<div class="seg">'
     + '<button data-vista="mese" data-on="' + (S.vista === 'mese' ? 1 : 0) + '">Mese</button>'
     + '<button data-vista="anno" data-on="' + (perAnno ? 1 : 0) + '">Anno ' + anno + '</button>'
-    + '<button data-vista="categoria" data-on="' + (S.vista === 'categoria' ? 1 : 0) + '">Categoria</button></div>';
+    + '<button data-vista="categoria" data-on="' + (S.vista === 'categoria' ? 1 : 0) + '">Categoria</button>'
+    + '<button data-vista="budget" data-on="' + (S.vista === 'budget' ? 1 : 0) + '">Budget</button></div>';
   if (S.vista === 'categoria') return seg + vistaCategoria();
+  if (S.vista === 'budget') return seg + vistaBudget();
 
   const movs = perAnno ? dellAnno(S.dati.movimenti, anno) : delMese(S.dati.movimenti, S.mese);
   const r = riepilogo(S.dati, movs);
