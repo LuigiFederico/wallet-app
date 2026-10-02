@@ -68,6 +68,10 @@ export function eurEsatto(n) {
 export function eurSegno(n) {
   return (n >= 0 ? '+' : '−') + eur(Math.abs(n));
 }
+/* etichetta dell'asse Y: '0', '250', '1k', '1,5k' */
+export function etichettaAsse(v) {
+  return v < 1000 ? String(v) : String(v / 1000).replace('.', ',') + 'k';
+}
 export function percentuale(parte, tot) {
   return tot ? Math.round((parte / tot) * 100) + '%' : '—';
 }

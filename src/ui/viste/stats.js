@@ -1,11 +1,11 @@
 /* Statistiche: indicatori, uscite per categoria, andamento annuale, budget; viste Categoria e Budget. */
 
 import { S } from '../../state.js';
-import { esc, eur, eurSegno, chiaveMese, percentuale, indiceMese, meseInFrase, nomeMese, oggiISO, spostaChiaveMese, periodoMedia } from '../../core/formato.js';
+import { esc, eur, eurSegno, chiaveMese, percentuale, indiceMese, meseInFrase, nomeMese, oggiISO, spostaChiaveMese, periodoMedia, etichettaAsse } from '../../core/formato.js';
 import { MESI, SIGLE, COLORE_FUORI } from '../../core/costanti.js';
 import {
   delMese, dellAnno, totale, riepilogo, righeBudget, righeConBudget, budgetDi, totaleBudget, meseBudgetPrecedente, daRimborsare,
-  categorie as categorieDi, uscitePerCategoria, andamentoCategoria, mediaSpesaRecente
+  categorie as categorieDi, uscitePerCategoria, andamentoCategoria, mediaSpesaRecente, scalaAsse
 } from '../../core/calcoli.js';
 import { ciambella, fetteUscite } from '../componenti.js';
 
@@ -47,24 +47,36 @@ function perCategoria(r, tot) {
     + '</div></div>';
 }
 
+/* asse Y: le etichette stanno in una colonna a sinistra, le righe dietro le barre */
+function posizioneAsse(scala, v) {
+  return ((v / scala.top) * 100).toFixed(1) + '%';
+}
+function etichetteAsse(scala) {
+  return '<div class="grafico-asse">' + scala.righe.map((v) => '<span style="bottom:' + posizioneAsse(scala, v) + '">' + etichettaAsse(v) + '</span>').join('') + '</div>';
+}
+function righeGuida(scala) {
+  return '<div class="grafico-righe">' + scala.righe.map((v) => '<i style="bottom:' + posizioneAsse(scala, v) + '"></i>').join('') + '</div>';
+}
+
 function andamentoAnnuale(anno) {
   const mesi = MESI.map((_, i) => {
     const k = chiaveMese(anno, i);
     const mm = delMese(S.dati.movimenti, k);
     return { k, sigla: SIGLE[i], inn: totale(S.dati, mm, 'entrata', true), out: totale(S.dati, mm, 'uscita', true) };
   });
-  const max = Math.max(1, ...mesi.map((m) => Math.max(m.inn, m.out)));
-  const altezza = (v) => ((v / max) * 100).toFixed(1) + '%';
+  const scala = scalaAsse(Math.max(...mesi.map((m) => Math.max(m.inn, m.out))));
+  const altezza = (v) => ((v / scala.top) * 100).toFixed(1) + '%';
 
   return '<div class="h2 titolo-sez">Entrate e uscite, mese per mese</div>'
     + '<div class="card grafico">'
+    + '<div class="grafico-area">' + etichetteAsse(scala) + '<div class="grafico-corpo">' + righeGuida(scala)
     + '<div class="grafico-barre">'
     + mesi.map((m) => '<button class="grafico-mese" data-mese="' + m.k + '">'
         + '<div class="grafico-colonne">'
         + '<i class="grafico-in" style="height:' + altezza(m.inn) + '"></i>'
         + '<i class="grafico-out" style="height:' + altezza(m.out) + '"></i></div>'
         + '<div class="grafico-sigla" data-on="' + (m.k === S.mese ? 1 : 0) + '">' + m.sigla + '</div></button>').join('')
-    + '</div>'
+    + '</div></div></div>'
     + '<div class="grafico-legenda">'
     + '<div class="grafico-voce"><i class="grafico-in"></i>Entrate</div>'
     + '<div class="grafico-voce"><i class="grafico-out"></i>Uscite</div>'
@@ -160,10 +172,12 @@ function indicatoriCategoria(a, uscita) {
 
 /* una barra per mese; la tacca è il budget del mese. Si scorre in orizzontale se i mesi sono tanti. */
 function graficoCategoria(a, coloreCat, uscita) {
-  const max = Math.max(1, ...a.mesi.map((m) => Math.max(m.val, m.bud)));
-  const pct = (v) => ((v / max) * 100).toFixed(1) + '%';
+  const scala = scalaAsse(Math.max(...a.mesi.map((m) => Math.max(m.val, m.bud))));
+  const pct = (v) => posizioneAsse(scala, v);
+  // le etichette dell'asse restano ferme: scorrono solo le barre
   return '<div class="h2 titolo-sez">Mese per mese</div>'
     + '<div class="card grafico">'
+    + '<div class="grafico-area">' + etichetteAsse(scala) + '<div class="grafico-corpo">' + righeGuida(scala)
     + '<div class="grafico-scorri"><div class="grafico-barre grafico-barre--cat">'
     + a.mesi.map((m, i) => '<button class="grafico-mese" data-mese="' + m.k + '">'
         + '<div class="grafico-colonne">'
@@ -171,7 +185,7 @@ function graficoCategoria(a, coloreCat, uscita) {
         + (m.bud ? '<b class="grafico-tacca" style="bottom:' + pct(m.bud) + '"></b>' : '') + '</div>'
         + '<div class="grafico-sigla" data-on="' + (m.k === S.mese ? 1 : 0) + '">' + SIGLE[indiceMese(m.k)] + '</div>'
         + '<div class="grafico-anno">' + (i === 0 || m.k.slice(5) === '01' ? m.k.slice(0, 4) : '') + '</div></button>').join('')
-    + '</div></div>'
+    + '</div></div></div></div>'
     + '<div class="grafico-legenda">'
     + '<div class="grafico-voce"><i style="background:' + coloreCat + '"></i>' + (uscita ? 'Speso' : 'Incassato') + '</div>'
     + (uscita ? '<div class="grafico-voce"><i class="grafico-tacca-voce"></i>Budget</div><div class="grafico-voce"><i class="grafico-oltre"></i>Oltre il budget</div>' : '')

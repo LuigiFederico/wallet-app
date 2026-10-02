@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { datiVuoti } from '../src/core/dati.js';
 import {
   colore, escluse, delMese, dellAnno, totale, uscitePerCategoria, riepilogo, daRimborsare, righeBudget,
-  budgetDi, meseBudgetPrecedente, totaleBudget, inAttesaDiRimborso, categoriaConRuolo, andamentoCategoria, mediaSpesaRecente
+  budgetDi, meseBudgetPrecedente, totaleBudget, inAttesaDiRimborso, categoriaConRuolo, andamentoCategoria, mediaSpesaRecente, scalaAsse
 } from '../src/core/calcoli.js';
 
 const mv = (tipo, data, importo, categoria, extra) => ({ id: data + categoria, tipo, data, importo, categoria, ...extra });
@@ -173,4 +173,14 @@ test('mediaSpesaRecente: con poco storico usa i mesi disponibili, il mese stesso
   assert.deepEqual([sett.mesi, sett.valori.Affitto, sett.valori['Spesa settimanale']], [1, 1000, 0]);
   assert.equal(mediaSpesaRecente(d, '2026-08'), null);
   assert.equal(mediaSpesaRecente(datiVuoti(), '2026-10'), null);
+});
+
+test('scalaAsse: passo tondo, al massimo 3 passi sopra lo zero', () => {
+  assert.deepEqual(scalaAsse(0), { top: 1, righe: [0, 1] });
+  assert.deepEqual(scalaAsse(92), { top: 100, righe: [0, 50, 100] });
+  assert.deepEqual(scalaAsse(620), { top: 750, righe: [0, 250, 500, 750] });
+  assert.deepEqual(scalaAsse(1840), { top: 2000, righe: [0, 1000, 2000] });
+  assert.deepEqual(scalaAsse(2100), { top: 3000, righe: [0, 1000, 2000, 3000] });
+  assert.deepEqual(scalaAsse(3100), { top: 4000, righe: [0, 2000, 4000] });
+  assert.deepEqual(scalaAsse(7), { top: 10, righe: [0, 5, 10] }); // niente 2,5: le etichette restano intere
 });

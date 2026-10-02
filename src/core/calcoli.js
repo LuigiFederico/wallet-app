@@ -145,3 +145,17 @@ export function mediaSpesaRecente(dati, mese) {
   });
   return { mesi: finestra.length, valori };
 }
+
+/* Scala dell'asse Y: il passo "tondo" più piccolo (1 · 2 · 2,5 · 5 × 10ⁿ, intero) che arriva
+   a `max` in al massimo 3 passi. top = la riga più alta, su cui si scalano le barre. */
+export function scalaAsse(max) {
+  const m = Math.max(max, 1);
+  for (let base = 1; ; base *= 10) {
+    for (const f of [1, 2, 2.5, 5]) {
+      const passo = f * base, n = Math.ceil(m / passo);
+      if (Number.isInteger(passo) && n <= 3) {
+        return { top: n * passo, righe: Array.from({ length: n + 1 }, (_, i) => i * passo) };
+      }
+    }
+  }
+}
