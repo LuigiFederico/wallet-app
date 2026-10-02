@@ -11,7 +11,8 @@ const ICONA_FILE = '<svg width="17" height="20" viewBox="0 0 18 22" fill="none">
 function avvisoFile(collegato) {
   if (collegato && !S.permessoCartella) {
     return '<div class="avviso avviso--attenzione">Chrome ha sospeso l\'accesso alla cartella. Le modifiche sono al sicuro su questo telefono e le scrivo nel file appena riattivi'
-      + ' (altrimenti il browser lo chiede al prossimo salvataggio). Scegli «Consenti a ogni visita» per non doverlo più rifare.</div>';
+      + ' (altrimenti il browser lo chiede al prossimo salvataggio). Su Android Chrome non ricorda il permesso: lo chiedo al primo tocco dopo ogni apertura.'
+      + ' Sul computer scegli «Consenti a ogni visita» per non doverlo più rifare.</div>';
   }
   if (collegato) {
     return '<div class="avviso avviso--ok"><i></i><div>Salvataggio automatico attivo — ogni modifica riscrive il file.</div></div>';

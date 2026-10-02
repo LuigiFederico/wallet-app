@@ -21,10 +21,12 @@ nessun dato che esce dal dispositivo.
 > Suggerimento: scegli una cartella sincronizzata con Google Drive o OneDrive.
 > Hai backup automatico e apri lo stesso file dal PC.
 
-Il permesso sulla cartella è persistente: Chrome non lo richiede a ogni avvio.
-Se lo revochi, l'app continua a funzionare salvando nel browser e l'indicatore in
-testata diventa rosso («Accesso scaduto»): da **Impostazioni → Riattiva l'accesso**
-torna a scrivere nella stessa cartella, oppure il browser lo chiede al prossimo salvataggio.
+Su Android Chrome non conserva il permesso sulla cartella tra un avvio e l'altro
+(il permesso permanente, «Consenti a ogni visita», esiste solo sul computer): l'app lo
+chiede al primo tocco dopo ogni apertura e poi rilegge il file. Se lo neghi, l'app
+continua a funzionare salvando nel browser e l'indicatore in testata diventa rosso
+(«Accesso scaduto»): da **Impostazioni → Riattiva l'accesso** torna a scrivere nella
+stessa cartella, oppure il browser lo chiede al prossimo salvataggio.
 
 Se la cartella contiene già un `wallet-data.json` diverso dai dati del telefono (o il
 file è stato aggiornato da un altro dispositivo), l'app chiede quale versione tenere e
