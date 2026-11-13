@@ -23,7 +23,8 @@ export const ESCLUDIBILI = [RUOLO_BUONI_PASTO, RUOLO_RIMBORSO, RUOLO_INVESTIMENT
 export const FILTRI_STORICO = ['Tutti', 'Uscite', 'Entrate', RUOLO_RIMBORSO, RUOLO_INVESTIMENTI];
 
 export const COLORE_DEFAULT = '#8A8178';
-export const COLORE_FUORI = '#DDD5C7'; // fette delle categorie escluse dal portafoglio
+export const COLORE_FUORI = '#D1D1D6'; // fette delle categorie escluse dal portafoglio
+export const COLORE_OLTRE = '#FF3B30'; // barre del budget superato (come --rosso-sistema nel CSS)
 
 /* colori tra cui scegliere per una categoria (Impostazioni) */
 export const PALETTE = [

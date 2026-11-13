@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { datiVuoti } from '../src/core/dati.js';
 import {
   colore, escluse, delMese, dellAnno, totale, uscitePerCategoria, riepilogo, daRimborsare, righeBudget,
-  budgetDi, meseBudgetPrecedente, totaleBudget, inAttesaDiRimborso, categoriaConRuolo, andamentoCategoria, mediaSpesaRecente, scalaAsse
+  budgetDi, meseBudgetPrecedente, totaleBudget, inAttesaDiRimborso, categoriaConRuolo, andamentoCategoria, mediaSpesaRecente, scalaAsse,
+  cumulata, spesaDiSolito, entratePerCategoria
 } from '../src/core/calcoli.js';
 
 const mv = (tipo, data, importo, categoria, extra) => ({ id: data + categoria, tipo, data, importo, categoria, ...extra });
@@ -94,7 +95,7 @@ test('righeBudget: barra piena e rossa quando si sfora', () => {
   const [affitto, spesa] = righe;
   assert.deepEqual(
     { nome: affitto.nome, speso: affitto.speso, bud: affitto.bud, diff: affitto.diff, w: affitto.w, barColore: affitto.barColore },
-    { nome: 'Affitto', speso: 600, bud: 500, diff: -100, w: '100.0%', barColore: '#C0452B' }
+    { nome: 'Affitto', speso: 600, bud: 500, diff: -100, w: '100.0%', barColore: '#FF3B30' }
   );
   assert.equal(spesa.nome, 'Spesa settimanale');
   assert.equal(spesa.w, '75.0%');
@@ -183,4 +184,49 @@ test('scalaAsse: passo tondo, al massimo 3 passi sopra lo zero', () => {
   assert.deepEqual(scalaAsse(2100), { top: 3000, righe: [0, 1000, 2000, 3000] });
   assert.deepEqual(scalaAsse(3100), { top: 4000, righe: [0, 2000, 4000] });
   assert.deepEqual(scalaAsse(7), { top: 10, righe: [0, 5, 10] }); // niente 2,5: le etichette restano intere
+});
+
+test('cumulata: uscite del portafoglio sommate giorno per giorno, escluse fuori', () => {
+  const d = esempio();
+  const c = cumulata(d, '2026-09');
+  assert.equal(c.length, 30);
+  assert.equal(c[0], 0);
+  assert.equal(c[1], 600);
+  assert.equal(c[3], 750);
+  assert.equal(c[29], 750); // "Da rimborsare" è fuori dal portafoglio
+  assert.equal(cumulata(d, '2026-02').length, 28);
+});
+
+test('spesaDiSolito: mediana dei 3 mesi prima, regge un mese straordinario', () => {
+  const d = datiVuoti();
+  d.movimenti = [
+    mv('uscita', '2026-01-01', 100, 'Affitto'), mv('uscita', '2026-01-31', 50, 'Svago'),
+    mv('uscita', '2026-02-01', 100, 'Affitto'), mv('uscita', '2026-02-10', 2000, 'Altro'),
+    mv('uscita', '2026-03-01', 100, 'Affitto'), mv('uscita', '2026-03-15', 30, 'Svago')
+  ];
+  const s = spesaDiSolito(d, '2026-04', '2026-04');
+  assert.equal(s.mesi, 3);
+  assert.equal(s.giorni.length, 30);
+  assert.equal(s.giorni[0], 100);
+  assert.equal(s.giorni[14], 130); // febbraio (2100) non sposta la mediana
+  assert.equal(s.giorni[28], 130); // febbraio ha 28 giorni: si usa il suo ultimo valore
+  assert.equal(s.giorni[29], 150); // l'ultimo giorno è il totale dei mesi: 150, 2100, 130
+});
+
+test('spesaDiSolito: finestra limitata dal primo movimento, null senza storico', () => {
+  const d = datiVuoti();
+  d.movimenti = [mv('uscita', '2026-01-05', 100, 'Svago'), mv('uscita', '2026-02-05', 300, 'Svago')];
+  assert.equal(spesaDiSolito(d, '2026-01', '2026-03'), null);
+  assert.equal(spesaDiSolito(d, '2026-02', '2026-03').mesi, 1);
+  const marzo = spesaDiSolito(d, '2026-03', '2026-03');
+  assert.equal(marzo.mesi, 2);
+  assert.equal(marzo.giorni[30], 200); // mediana di due mesi = media
+  // un mese futuro non conta il mese in corso, che non è finito
+  assert.equal(spesaDiSolito(d, '2026-03', '2026-02').mesi, 1);
+});
+
+test('entratePerCategoria: solo il portafoglio, dalla più grande, con il colore', () => {
+  const e = entratePerCategoria(esempio(), delMese(esempio().movimenti, '2026-09'));
+  assert.deepEqual(e.map((x) => [x.nome, x.val]), [['Stipendio', 2000]]); // Buoni pasto è escluso
+  assert.ok(e[0].colore);
 });

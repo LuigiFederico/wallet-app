@@ -2,7 +2,7 @@
 
 import { S } from '../state.js';
 import { LS_BANNER } from '../core/costanti.js';
-import { oggiISO, ieriISO } from '../core/formato.js';
+import { oggiISO } from '../core/formato.js';
 import { PALETTE } from '../core/costanti.js';
 import { bozzaPronta, movimentoDaBozza, bozzaDaMovimento, usoCategoria } from '../core/dati.js';
 import { categorie, colore } from '../core/calcoli.js';
@@ -13,28 +13,28 @@ import {
 import { scegliCartella, riattivaAccesso, confermaVersione } from '../persistenza.js';
 import { exportJson, exportCsv, exportXlsx } from '../export/index.js';
 import { render, renderSheets, apriSheet, chiudiSheet } from './render.js';
-import { aggiornaForm, animaSalvataggio } from './sheet/aggiungi.js';
+import { aggiornaForm, animaSalvataggio, premiTasto } from './sheet/aggiungi.js';
 import { aggiornaCategoria } from './sheet/categoria.js';
 
 function vaiA(tab) { S.tab = tab; render(); }
 
-/* il form si apre con il cursore nell'importo, così la tastiera numerica è già pronta */
-function focusImporto() {
-  const f = document.getElementById('f-imp');
-  if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); }
+/* Il focus va sul pannello all'apertura: lascia il + (Invio e Spazio lo ripremerebbero, azzerando la bozza). */
+function focusPannello() {
+  const p = document.querySelector('#sheetAdd .panel');
+  if (p) p.focus({ preventScroll: true });
 }
 
 function apriAggiungi() {
-  S.bozza = { tipo: 'uscita', data: oggiISO(), importo: '', categoria: '', descrizione: '' };
+  S.bozza = { tipo: 'uscita', data: oggiISO(), importo: '', calcolo: '', categoria: '', descrizione: '' };
   apriSheet();
-  focusImporto();
+  focusPannello();
 }
 
 function apriModifica() {
   S.bozza = bozzaDaMovimento(S.dettaglio);
   S.dettaglio = null;
   renderSheets();
-  focusImporto();
+  focusPannello();
 }
 
 function salvaBozza() {
@@ -44,16 +44,6 @@ function salvaBozza() {
   const ritardo = b.tipo === 'uscita' ? animaSalvataggio() : 0;
   chiudiSheet();
   if (b.id) modifica(b, ritardo); else aggiungi(movimentoDaBozza(S.dati, b), ritardo);
-}
-
-function scegliGiorno(giorno) {
-  if (giorno === 'altra') {
-    const inp = document.getElementById('f-data');
-    try { inp.showPicker(); } catch (e) { inp.classList.add('is-visibile'); inp.focus(); }
-    return;
-  }
-  S.bozza.data = giorno === 'ieri' ? ieriISO() : oggiISO();
-  aggiornaForm();
 }
 
 /* nome = null: categoria nuova, con il primo colore della tavolozza non ancora usato in quel tipo */
@@ -88,7 +78,7 @@ function nascondiBanner() {
 
 /* click nel contenuto: il primo selettore che corrisponde vince */
 const CLICK_CONTENUTO = [
-  ['[data-go]', (el) => vaiA(el.dataset.go)],
+  ['[data-go]', (el) => { if (el.dataset.goVista) S.vista = el.dataset.goVista; vaiA(el.dataset.go); }],
   ['[data-det]', (el) => { S.dettaglio = S.dati.movimenti.find((m) => m.id === el.dataset.det) || null; apriSheet(); }],
   ['[data-filtro]', (el) => { S.filtro = el.dataset.filtro; render(); }],
   // «Modifica budget» è in fondo alla vista Mese: la vista nuova si apre dall'inizio
@@ -118,8 +108,17 @@ const CLICK_CONTENUTO = [
 
 const CLICK_SHEET = [
   ['[data-close]', chiudiSheet],
-  ['[data-tipo]', (el) => { S.bozza.tipo = el.dataset.tipo; S.bozza.categoria = ''; renderSheets(); }],
-  ['[data-giorno]', (el) => scegliGiorno(el.dataset.giorno)],
+  // il ridisegno cancella il pulsante: da tastiera (detail 0) il focus torna sullo stesso tipo, col mouse sul pannello
+  ['[data-tipo]', (el, e) => {
+    S.bozza.tipo = el.dataset.tipo; S.bozza.categoria = ''; renderSheets();
+    if (e.detail) focusPannello(); else document.querySelector('[data-tipo="' + S.bozza.tipo + '"]').focus();
+  }],
+  ['[data-tasto]', (el) => {
+    // un tasto chiude la tastiera del telefono aperta sulla descrizione
+    if (document.activeElement && document.activeElement.id === 'f-desc') document.activeElement.blur();
+    premiTasto(el.dataset.tasto);
+    if (el.dataset.tasto === 'C') focusPannello(); // il pulsante si nasconde: il focus non deve cadere sulla pagina
+  }],
   ['#salvaMov', salvaBozza],
   ['#detRimb', () => toggleRimborso(S.dettaglio.id)],
   ['#detMod', apriModifica],
@@ -133,11 +132,73 @@ const CLICK_SHEET = [
   ['#confElimina', confermaElimina]
 ];
 
+const TASTI_FISICI = { ',': ',', '.': ',', '+': '+', '-': '−', '*': '×', x: '×', '/': '÷', Backspace: '⌫', Delete: '⌫' };
+
+/* Un pannello con la maniglia si chiude trascinandolo verso il basso, solo col tocco (col mouse ci sono
+   il velo, Esc e la maniglia stessa). Il trascinamento parte dalla parte alta (maniglia, Uscita/Entrata,
+   importo), non dal tastierino o dai campi, così un dito che scivola mentre si scrive non butta la bozza.
+   Sotto un quarto dell'altezza (al massimo 120px) il pannello torna su. */
+const ZONA_TRASCINA = '.maniglia, .seg, .calc-schermo';
+
+function trascinaPerChiudere(sheets) {
+  let g = null; // trascinamento in corso: { panel, x, y, dy, attivo }
+  let bloccaClic = null; // dopo un trascinamento, il clic sullo stesso elemento non conta come tocco
+
+  function muovi(e) {
+    const t = e.touches[0], dx = Math.abs(t.clientX - g.x);
+    g.dy = t.clientY - g.y;
+    if (!g.attivo) {
+      if (Math.abs(g.dy) < 8 && dx < 8) return;
+      // solo in giù e più in verticale che in orizzontale; altrimenti decide il browser
+      if (g.dy < 8 || dx > g.dy) { rilascia(false); return; }
+      g.attivo = true;
+      g.panel.style.animation = 'none'; // l'animazione di entrata altrimenti coprirebbe lo spostamento
+      g.panel.style.transition = 'none';
+    }
+    e.preventDefault();
+    g.panel.style.transform = 'translateY(' + Math.max(0, g.dy) + 'px)';
+  }
+
+  // fine del tocco: chiude se è sceso abbastanza, altrimenti torna su (anche se il tocco è stato annullato)
+  function rilascia(chiudi) {
+    const { panel, attivo, dy } = g;
+    panel.removeEventListener('touchmove', muovi);
+    g = null;
+    if (!attivo) return;
+    panel.style.transition = 'transform .2s ease';
+    if (chiudi && dy > Math.min(120, panel.offsetHeight / 4)) {
+      const bozza = S.bozza;
+      panel.style.transform = 'translateY(100%)';
+      // chiude solo se nel frattempo non è cambiato niente (es. è comparso il pannello del conflitto)
+      setTimeout(() => { if (S.bozza === bozza && !S.conflitto) chiudiSheet(); }, 200);
+    } else panel.style.transform = '';
+  }
+
+  sheets.addEventListener('touchstart', (e) => {
+    if (g) { if (g.attivo) return; rilascia(false); } // un secondo dito non interrompe il trascinamento
+    const panel = e.target.closest('.panel--maniglia');
+    if (!panel || e.touches.length > 1 || panel.scrollTop > 0 || !e.target.closest(ZONA_TRASCINA)) return;
+    g = { panel, x: e.touches[0].clientX, y: e.touches[0].clientY, dy: 0, attivo: false, origine: e.target };
+    // il touchmove che blocca lo scorrimento sta solo su questo pannello e solo durante il tocco
+    panel.addEventListener('touchmove', muovi, { passive: false });
+  }, { passive: true });
+  sheets.addEventListener('touchend', (e) => {
+    if (!g || e.touches.length) return;
+    if (g.attivo) bloccaClic = { el: g.origine, fino: Date.now() + 400 };
+    rilascia(true);
+  });
+  sheets.addEventListener('touchcancel', () => { if (g) rilascia(false); });
+  sheets.addEventListener('click', (e) => {
+    if (bloccaClic && Date.now() < bloccaClic.fino && bloccaClic.el.contains(e.target)) { e.stopPropagation(); e.preventDefault(); }
+    bloccaClic = null;
+  }, true);
+}
+
 function delega(gestori) {
   return (e) => {
     for (const [sel, fn] of gestori) {
       const el = e.target.closest(sel);
-      if (el) { fn(el); return; }
+      if (el) { fn(el, e); return; }
     }
   };
 }
@@ -173,13 +234,18 @@ export function collegaEventi() {
 
   const sheets = document.getElementById('sheets');
   sheets.addEventListener('click', delega(CLICK_SHEET));
+  trascinaPerChiudere(sheets);
+  // un clic del mouse non lascia il focus su un tasto del tastierino (Spazio e Invio lo ripeterebbero);
+  // tocchi e lettori di schermo restano come sono
+  let puntatore = '';
+  sheets.addEventListener('pointerdown', (e) => { puntatore = e.pointerType; });
+  sheets.addEventListener('mousedown', (e) => { if (puntatore === 'mouse' && e.target.closest('[data-tasto]')) e.preventDefault(); });
   sheets.addEventListener('input', (e) => {
     if (S.categoria && e.target.id === 'c-nome') { S.categoria.nome = e.target.value; aggiornaCategoria(); }
     if (!S.bozza) return;
     if (e.target.id === 'f-data' && e.target.value) S.bozza.data = e.target.value;
-    if (e.target.id === 'f-imp') S.bozza.importo = e.target.value;
     if (e.target.id === 'f-desc') S.bozza.descrizione = e.target.value;
-    if (e.target.id === 'f-imp' || e.target.id === 'f-data') aggiornaForm();
+    if (e.target.id === 'f-data') aggiornaForm();
   });
   sheets.addEventListener('change', (e) => {
     if (S.bozza && e.target.id === 'f-cat') { S.bozza.categoria = e.target.value; aggiornaForm(); }
@@ -201,6 +267,12 @@ export function collegaEventi() {
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && (S.bozza || S.dettaglio || S.conflitto || S.categoria)) chiudiSheet();
+    if (e.key === 'Escape' && (S.bozza || S.dettaglio || S.conflitto || S.categoria)) { chiudiSheet(); return; }
+    // con il form aperto la tastiera fisica scrive nella calcolatrice, anche dopo aver scelto data o categoria;
+    // solo la descrizione tiene per sé quello che si scrive
+    if (!document.getElementById('sheetAdd') || e.ctrlKey || e.metaKey || e.altKey || e.target.id === 'f-desc') return;
+    const tasto = TASTI_FISICI[e.key] || (/^\d$/.test(e.key) ? e.key : '');
+    if (tasto) { e.preventDefault(); premiTasto(tasto); }
+    else if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') { e.preventDefault(); salvaBozza(); }
   });
 }

@@ -6,7 +6,7 @@ import { FILENAME, ESCLUDIBILI } from '../../core/costanti.js';
 import { escluse, categoriaConRuolo, categorie } from '../../core/calcoli.js';
 import { supportaFS } from '../../storage/file.js';
 
-const ICONA_FILE = '<svg width="17" height="20" viewBox="0 0 18 22" fill="none"><path d="M2 1.8h9l5 5v13.4a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2.8a1 1 0 0 1 1-1Z" stroke="#5B4BC4" stroke-width="1.6"/><path d="M11 1.8V7h5" stroke="#5B4BC4" stroke-width="1.6"/></svg>';
+const ICONA_FILE = '<svg width="17" height="20" viewBox="0 0 18 22" fill="none"><path d="M2 1.8h9l5 5v13.4a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2.8a1 1 0 0 1 1-1Z" stroke="#5856D6" stroke-width="1.6"/><path d="M11 1.8V7h5" stroke="#5856D6" stroke-width="1.6"/></svg>';
 
 function avvisoFile(collegato) {
   if (collegato && !S.permessoCartella) {
@@ -31,7 +31,7 @@ function statoFile() {
 function pulsantiCartella(collegato) {
   if (!supportaFS) return '';
   if (collegato && !S.permessoCartella) {
-    return '<button id="riattiva" class="cta cta--accento">Riattiva l\'accesso a ' + esc(S.dirHandle.name) + '</button>'
+    return '<button id="riattiva" class="cta">Riattiva l\'accesso a ' + esc(S.dirHandle.name) + '</button>'
       + '<button id="pickDir" class="link-btn link-btn--centro">Scegli un\'altra cartella</button>';
   }
   return '<button id="pickDir" class="cta">' + (collegato ? 'Cambia cartella' : 'Scegli la cartella') + '</button>';
@@ -68,7 +68,7 @@ function sezioneEsclusioni() {
         if (!c) return '';
         const conta = escluse(S.dati, tipo).indexOf(c.nome) < 0;
         return '<button class="row" role="switch" aria-checked="' + conta + '" data-escl="' + ruolo + '"><div class="riga-nome">' + esc(c.nome) + '</div>'
-          + '<div class="switch-stato' + (conta ? ' is-on' : '') + '">' + (conta ? 'Conta' : 'Non conta') + '</div>'
+          + '<div class="switch-stato">' + (conta ? 'Conta' : 'Non conta') + '</div>'
           + '<div class="switch" data-on="' + (conta ? 1 : 0) + '"><i></i></div></button>';
       }).join('')
     + '</div>';

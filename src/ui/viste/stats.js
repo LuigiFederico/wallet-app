@@ -2,7 +2,7 @@
 
 import { S } from '../../state.js';
 import { esc, eur, eurSegno, chiaveMese, percentuale, indiceMese, meseInFrase, nomeMese, oggiISO, spostaChiaveMese, periodoMedia, etichettaAsse } from '../../core/formato.js';
-import { MESI, SIGLE, COLORE_FUORI } from '../../core/costanti.js';
+import { MESI, SIGLE, COLORE_FUORI, COLORE_OLTRE } from '../../core/costanti.js';
 import {
   delMese, dellAnno, totale, riepilogo, righeBudget, righeConBudget, budgetDi, totaleBudget, meseBudgetPrecedente, daRimborsare,
   categorie as categorieDi, uscitePerCategoria, andamentoCategoria, mediaSpesaRecente, scalaAsse
@@ -32,7 +32,7 @@ function rigaTorta(nome, colore, val, pct, fuori) {
     + '<div class="num torta-pct">' + pct + '</div></div>';
 }
 
-/* come in Casa: il centro e le percentuali sono del portafoglio, le escluse restano in grigio a parte */
+/* il centro e le percentuali sono del portafoglio, le escluse restano in grigio a parte */
 function perCategoria(r, tot) {
   return '<div class="h2 titolo-primo">Dove sono finiti i soldi</div>'
     + '<div class="card torta">'
@@ -181,7 +181,7 @@ function graficoCategoria(a, coloreCat, uscita) {
     + '<div class="grafico-scorri"><div class="grafico-barre grafico-barre--cat">'
     + a.mesi.map((m, i) => '<button class="grafico-mese" data-mese="' + m.k + '">'
         + '<div class="grafico-colonne">'
-        + '<i style="height:' + pct(m.val) + ';background:' + (m.bud && m.val > m.bud ? '#C0452B' : coloreCat) + '"></i>'
+        + '<i style="height:' + pct(m.val) + ';background:' + (m.bud && m.val > m.bud ? COLORE_OLTRE : coloreCat) + '"></i>'
         + (m.bud ? '<b class="grafico-tacca" style="bottom:' + pct(m.bud) + '"></b>' : '') + '</div>'
         + '<div class="grafico-sigla" data-on="' + (m.k === S.mese ? 1 : 0) + '">' + SIGLE[indiceMese(m.k)] + '</div>'
         + '<div class="grafico-anno">' + (i === 0 || m.k.slice(5) === '01' ? m.k.slice(0, 4) : '') + '</div></button>').join('')

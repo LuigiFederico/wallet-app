@@ -1,36 +1,40 @@
 :root {
-  --font: "Manrope", system-ui, -apple-system, sans-serif;
-  --font-serif: "Instrument Serif", serif;
+  /* San Francisco su iPhone/Mac; Inter come equivalente su Android e Windows */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, system-ui, sans-serif;
 
-  /* superfici */
-  --carta: #F7F3EC;          /* sfondo app */
-  --carta-scura: #EFE9DE;    /* pulsanti tenui */
+  /* superfici (systemGroupedBackground di iOS) */
+  --carta: #F2F2F7;          /* sfondo app */
+  --riempimento: rgba(118, 118, 128, .12); /* binario di controlli e campi: segmentato, ricerca, pillola, budget */
+  --carta-scura: rgba(118, 118, 128, .08); /* pulsanti tenui: testo colorato sopra, contrasto AA anche sui pannelli */
   --bianco: #fff;
 
-  /* testo */
-  --inchiostro: #16130F;
-  --testo-2: #5C554B;
-  --testo-3: #6F675C;
-  --etichetta: #6F675C;
-  --tab-spento: #6F675C;
-  --sigla-spenta: #7A7266;
+  /* testo: grigi di iOS scuriti quanto basta per il contrasto AA (4,5:1) anche sui fondi grigi */
+  --inchiostro: #000;
+  --testo-2: rgba(60, 60, 67, .85);
+  --testo-3: #636368;
+  --etichetta: #636368;
+  --tab-spento: #636368;
+  --sigla-spenta: #636368;
 
-  /* accenti */
-  --accento: #5B4BC4;
-  --verde: #2E7356;
-  --rosso: #C0452B;
-  --oro: #A8863C;
-  --oro-scuro: #7A5E1E;      /* testo bianco sopra: contrasto sufficiente */
-  --giallo: #C99A2E;
-  --grafico-in: #8FBBA6;
-  --grafico-out: #E0553A;
+  /* accenti: palette di sistema, varianti ad alto contrasto per il testo */
+  --accento: #5856D6;        /* systemIndigo, vicino al viola di prima */
+  --verde: #1E7B34;
+  --rosso: #C8000F;
+  --oro: #A05A00;
+  --oro-scuro: #8A4B00;      /* testo bianco sopra: contrasto sufficiente */
+  --giallo: #FF9F0A;
+  --verde-sistema: #34C759;  /* pallini, interruttori, grafici: mai per il testo */
+  --rosso-sistema: #FF3B30;
+  --grafico-in: var(--verde-sistema);
+  --grafico-out: var(--rosso-sistema);
+  --grafico-riferimento: #AEAEB2; /* linea "di solito" in Casa */
+  --grafico-binario: #E5E5EA;     /* anello vuoto delle ciambelle */
+  --accento-tenue: rgba(88, 86, 214, .10); /* area sotto la linea dell'accento */
 
-  /* linee (inchiostro trasparente) */
-  --linea-06: rgba(22, 19, 15, .06);
-  --linea-08: rgba(22, 19, 15, .08);
-  --linea-09: rgba(22, 19, 15, .09);
-  --linea-10: rgba(22, 19, 15, .10);
-  --linea-12: rgba(22, 19, 15, .12);
+  /* linee: separator di iOS */
+  --linea-12: rgba(60, 60, 67, .12); /* 1px pieno: niente mezzi pixel, che sugli schermi 1x possono sparire */
 
+  --raggio: 14px;            /* card e liste */
+  --ombra-card: 0 0 0 1px rgba(0, 0, 0, .07), 0 4px 16px rgba(0, 0, 0, .07); /* bordo sottile + ombra: stacca le card bianche dallo sfondo grigio */
   --safe-bottom: env(safe-area-inset-bottom);
 }

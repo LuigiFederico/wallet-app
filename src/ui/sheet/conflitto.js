@@ -5,7 +5,7 @@ import { FILENAME } from '../../core/costanti.js';
 import { esc, oggiISO, quando } from '../../core/formato.js';
 import { nomeBackup } from '../../core/dati.js';
 
-const ICONA_SCUDO = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.8 3 4.2v4.3c0 3.7 2.6 6.6 6 7.7 3.4-1.1 6-4 6-7.7V4.2L9 1.8Z" stroke="#44379A" stroke-width="1.5" stroke-linejoin="round"/><path d="m6.2 9 2 2 3.8-4" stroke="#44379A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICONA_SCUDO = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.8 3 4.2v4.3c0 3.7 2.6 6.6 6 7.7 3.4-1.1 6-4 6-7.7V4.2L9 1.8Z" stroke="#3634A3" stroke-width="1.5" stroke-linejoin="round"/><path d="m6.2 9 2 2 3.8-4" stroke="#3634A3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function movimenti(n) {
   return n + (n === 1 ? ' movimento' : ' movimenti');

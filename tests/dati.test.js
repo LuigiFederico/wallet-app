@@ -65,7 +65,21 @@ test('movimentoDaBozza arrotonda, usa la categoria come descrizione e segna i ri
 
 test('bozzaDaMovimento riporta il movimento nel form', () => {
   const m = { id: 'm1', tipo: 'uscita', data: '2026-09-18', importo: 42.5, categoria: 'Svago', descrizione: 'Cinema' };
-  assert.deepEqual(bozzaDaMovimento(m), { id: 'm1', tipo: 'uscita', data: '2026-09-18', importo: '42,5', categoria: 'Svago', descrizione: 'Cinema' });
+  assert.deepEqual(bozzaDaMovimento(m), {
+    id: 'm1', tipo: 'uscita', data: '2026-09-18', importo: '42,50', calcolo: '42,5', sostituisci: true, categoria: 'Svago', descrizione: 'Cinema'
+  });
+  // la calcolatrice parte senza zeri in coda, così si può continuare a scrivere
+  assert.equal(bozzaDaMovimento({ ...m, importo: 20 }).calcolo, '20');
+  // un importo con rumore binario (es. da Excel) entra già arrotondato
+  assert.equal(bozzaDaMovimento({ ...m, importo: 12.300000000000001 }).calcolo, '12,3');
+  // oltre il massimo della calcolatrice l'importo resta salvabile: si possono cambiare solo categoria o data
+  const enorme = bozzaDaMovimento({ ...m, importo: 12345678 });
+  assert.equal(enorme.calcolo, '12345678');
+  assert.equal(enorme.importo, '12345678,00');
+  assert.equal(bozzaPronta(enorme), true);
+  // un importo scritto come testo (JSON importato) si legge come prima, non come calcolo
+  assert.equal(bozzaDaMovimento({ ...m, importo: '1.234,50' }).importo, '1234,50');
+  assert.equal(bozzaDaMovimento({ ...m, importo: '1.234,50' }).calcolo, '1234,5');
   // la descrizione di default (= categoria) torna vuota, così resta facoltativa
   assert.equal(bozzaDaMovimento({ ...m, descrizione: 'Svago' }).descrizione, '');
   assert.equal(bozzaPronta(bozzaDaMovimento(m)), true);
