@@ -1,6 +1,6 @@
 /* Totali, riepiloghi e budget. Funzioni pure: ricevono i dati, non leggono lo stato. */
 
-import { COLORE_DEFAULT, RUOLO_RIMBORSO } from './costanti.js';
+import { COLORE_DEFAULT, COLORE_OLTRE, RUOLO_RIMBORSO } from './costanti.js';
 import { spostaChiaveMese } from './formato.js';
 
 export function categorie(dati, tipo) {
@@ -104,7 +104,7 @@ export function righeConBudget(dati, bm, catTot) {
     return {
       nome: c.nome, colore: c.colore, speso, bud, diff,
       w: Math.min(100, bud ? (speso / bud) * 100 : (speso ? 100 : 0)).toFixed(1) + '%',
-      barColore: bud && speso > bud ? '#C0452B' : c.colore
+      barColore: bud && speso > bud ? COLORE_OLTRE : c.colore
     };
   }).sort((a, b) => b.speso - a.speso);
 }

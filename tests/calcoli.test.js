@@ -94,7 +94,7 @@ test('righeBudget: barra piena e rossa quando si sfora', () => {
   const [affitto, spesa] = righe;
   assert.deepEqual(
     { nome: affitto.nome, speso: affitto.speso, bud: affitto.bud, diff: affitto.diff, w: affitto.w, barColore: affitto.barColore },
-    { nome: 'Affitto', speso: 600, bud: 500, diff: -100, w: '100.0%', barColore: '#C0452B' }
+    { nome: 'Affitto', speso: 600, bud: 500, diff: -100, w: '100.0%', barColore: '#FF3B30' }
   );
   assert.equal(spesa.nome, 'Spesa settimanale');
   assert.equal(spesa.w, '75.0%');
