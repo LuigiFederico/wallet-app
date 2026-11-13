@@ -37,9 +37,9 @@
 
 /* righe di elenco: separatore sottile che parte dopo il margine, come nelle liste iOS */
 .row { position: relative; display: flex; align-items: center; gap: 12px; padding: 11px 16px; min-height: 52px; width: 100%; text-align: left; }
-.row::after { content: ""; position: absolute; left: 16px; right: 0; bottom: 0; height: .5px; background: var(--linea-12); }
+.row::after { content: ""; position: absolute; left: 16px; right: 0; bottom: 0; height: 1px; background: var(--linea-12); }
 .row:last-child::after { display: none; }
-.row:active { opacity: 1; background: rgba(60, 60, 67, .06); }
+button.row:active { opacity: 1; background: rgba(60, 60, 67, .06); }
 .riga-nome { flex: 1; font: 400 15px/1.25 var(--font); }
 
 .mov-testo { flex: 1; min-width: 0; }

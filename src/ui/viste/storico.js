@@ -52,7 +52,7 @@ export function vistaStorico() {
   const gruppi = perGiorno(lista);
 
   return '<div class="cerca">'
-    + '<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="6.8" cy="6.8" r="5" stroke="#8E8E93" stroke-width="1.6"/><path d="M10.6 10.6L14.5 14.5" stroke="#8E8E93" stroke-width="1.6" stroke-linecap="round"/></svg>'
+    + '<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="6.8" cy="6.8" r="5" stroke="#636368" stroke-width="1.6"/><path d="M10.6 10.6L14.5 14.5" stroke="#636368" stroke-width="1.6" stroke-linecap="round"/></svg>'
     + '<input id="q" class="cerca-input" value="' + esc(S.query) + '" placeholder="Cerca in tutti i mesi">'
     + '</div>'
     + '<div class="chips">' + FILTRI_STORICO.filter(etichettaFiltro)

@@ -35,7 +35,7 @@
 .select-box { position: relative; display: flex; align-items: center; }
 .field--select { padding-left: 34px; padding-right: 40px; }
 .select-dot { position: absolute; left: 15px; width: 10px; height: 10px; pointer-events: none; }
-.select-freccia { position: absolute; right: 16px; pointer-events: none; color: rgba(60, 60, 67, .3); }
+.select-freccia { position: absolute; right: 16px; pointer-events: none; color: #8E8E93; }
 
 .chips--data { padding: 0; overflow: visible; flex-wrap: wrap; }
 .chip--data { display: flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; }
