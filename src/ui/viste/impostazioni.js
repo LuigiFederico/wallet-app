@@ -31,7 +31,7 @@ function statoFile() {
 function pulsantiCartella(collegato) {
   if (!supportaFS) return '';
   if (collegato && !S.permessoCartella) {
-    return '<button id="riattiva" class="cta cta--accento">Riattiva l\'accesso a ' + esc(S.dirHandle.name) + '</button>'
+    return '<button id="riattiva" class="cta">Riattiva l\'accesso a ' + esc(S.dirHandle.name) + '</button>'
       + '<button id="pickDir" class="link-btn link-btn--centro">Scegli un\'altra cartella</button>';
   }
   return '<button id="pickDir" class="cta">' + (collegato ? 'Cambia cartella' : 'Scegli la cartella') + '</button>';
@@ -68,7 +68,7 @@ function sezioneEsclusioni() {
         if (!c) return '';
         const conta = escluse(S.dati, tipo).indexOf(c.nome) < 0;
         return '<button class="row" role="switch" aria-checked="' + conta + '" data-escl="' + ruolo + '"><div class="riga-nome">' + esc(c.nome) + '</div>'
-          + '<div class="switch-stato' + (conta ? ' is-on' : '') + '">' + (conta ? 'Conta' : 'Non conta') + '</div>'
+          + '<div class="switch-stato">' + (conta ? 'Conta' : 'Non conta') + '</div>'
           + '<div class="switch" data-on="' + (conta ? 1 : 0) + '"><i></i></div></button>';
       }).join('')
     + '</div>';
