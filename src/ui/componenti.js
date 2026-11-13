@@ -7,7 +7,7 @@ import { colore, inAttesaDiRimborso } from '../core/calcoli.js';
 
 /* Stop del conic-gradient per il grafico a ciambella. */
 function gradiente(ordinate, tot) {
-  if (!ordinate.length) return '#E4DCCD 0% 100%';
+  if (!ordinate.length) return '#E5E5EA 0% 100%';
   let acc = 0;
   return ordinate.map((c) => {
     const a = (acc / tot) * 100; acc += c.val;

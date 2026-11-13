@@ -7,7 +7,7 @@ import { delMese, riepilogo, righeBudget } from '../../core/calcoli.js';
 import { supportaFS } from '../../storage/file.js';
 import { ciambella, fetteUscite, rigaMovimento, testataSezione } from '../componenti.js';
 
-const ICONA_CARTELLA = '<svg width="18" height="16" viewBox="0 0 20 17" fill="none"><path d="M1.5 3.2c0-.9.7-1.7 1.7-1.7h4.2l2 2.2h7.4c.9 0 1.7.8 1.7 1.7v8.9c0 .9-.8 1.7-1.7 1.7H3.2c-1 0-1.7-.8-1.7-1.7V3.2Z" stroke="#5B4BC4" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+const ICONA_CARTELLA = '<svg width="18" height="16" viewBox="0 0 20 17" fill="none"><path d="M1.5 3.2c0-.9.7-1.7 1.7-1.7h4.2l2 2.2h7.4c.9 0 1.7.8 1.7 1.7v8.9c0 .9-.8 1.7-1.7 1.7H3.2c-1 0-1.7-.8-1.7-1.7V3.2Z" stroke="#5856D6" stroke-width="1.6" stroke-linejoin="round"/></svg>';
 
 /* finché i dati sono solo nel browser, invito a collegare una cartella */
 function bannerCartella() {

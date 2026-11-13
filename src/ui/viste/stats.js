@@ -181,7 +181,7 @@ function graficoCategoria(a, coloreCat, uscita) {
     + '<div class="grafico-scorri"><div class="grafico-barre grafico-barre--cat">'
     + a.mesi.map((m, i) => '<button class="grafico-mese" data-mese="' + m.k + '">'
         + '<div class="grafico-colonne">'
-        + '<i style="height:' + pct(m.val) + ';background:' + (m.bud && m.val > m.bud ? '#C0452B' : coloreCat) + '"></i>'
+        + '<i style="height:' + pct(m.val) + ';background:' + (m.bud && m.val > m.bud ? '#FF3B30' : coloreCat) + '"></i>'
         + (m.bud ? '<b class="grafico-tacca" style="bottom:' + pct(m.bud) + '"></b>' : '') + '</div>'
         + '<div class="grafico-sigla" data-on="' + (m.k === S.mese ? 1 : 0) + '">' + SIGLE[indiceMese(m.k)] + '</div>'
         + '<div class="grafico-anno">' + (i === 0 || m.k.slice(5) === '01' ? m.k.slice(0, 4) : '') + '</div></button>').join('')
