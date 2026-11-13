@@ -2,7 +2,7 @@
 
 import { S } from '../state.js';
 import { COLORE_FUORI } from '../core/costanti.js';
-import { esc, eur, dataBreve, sigla } from '../core/formato.js';
+import { esc, eur, sigla } from '../core/formato.js';
 import { colore, inAttesaDiRimborso } from '../core/calcoli.js';
 
 /* Stop del conic-gradient per il grafico a ciambella. */
@@ -20,7 +20,7 @@ export function fetteUscite(r) {
   return r.portafoglio.concat(r.fuori.map((c) => Object.assign({}, c, { colore: COLORE_FUORI })));
 }
 
-/* taglia: 'sm' (Casa) | 'lg' (Statistiche) */
+/* taglia: 'lg' (Statistiche) */
 export function ciambella(ordinate, tot, etichetta, valore, taglia) {
   return '<div class="donut donut--' + taglia + '" style="background:conic-gradient(' + gradiente(ordinate, tot) + ')">'
     + '<div class="donut-foro"><div class="lbl">' + etichetta + '</div><div class="num donut-val">' + valore + '</div></div></div>';
@@ -47,24 +47,10 @@ function classeImporto(m) {
   return 'num mov-importo' + (m.tipo === 'entrata' ? ' is-entrata' : '');
 }
 
-/* Riga con avatar e data (Casa). */
-export function rigaMovimento(m) {
-  return '<button class="row" data-det="' + m.id + '">'
-    + avatarCategoria(m)
-    + testoMovimento(m)
-    + '<div class="mov-dx"><div class="' + classeImporto(m) + '">' + importoMovimento(m) + '</div>'
-    + '<div class="mov-data">' + dataBreve(m.data) + '</div></div></button>';
-}
-
 /* Riga compatta con pallino colorato (Storico, già raggruppato per giorno). */
 export function rigaMovimentoCompatta(m) {
   return '<button class="row" data-det="' + m.id + '">'
     + '<i class="dot" style="background:' + coloreMovimento(m) + '"></i>'
     + testoMovimento(m)
     + '<div class="' + classeImporto(m) + '">' + importoMovimento(m) + '</div></button>';
-}
-
-export function testataSezione(titolo, vaiA, link, classe) {
-  return '<div class="sez-testa ' + classe + '"><div class="h2">' + titolo + '</div>'
-    + '<button data-go="' + vaiA + '" class="link-btn">' + link + '</button></div>';
 }

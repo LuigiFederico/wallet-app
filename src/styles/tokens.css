@@ -27,6 +27,9 @@
   --rosso-sistema: #FF3B30;
   --grafico-in: var(--verde-sistema);
   --grafico-out: var(--rosso-sistema);
+  --grafico-riferimento: #AEAEB2; /* linea "di solito" in Casa */
+  --grafico-binario: #E5E5EA;     /* anello vuoto delle ciambelle */
+  --accento-tenue: rgba(88, 86, 214, .10); /* area sotto la linea dell'accento */
 
   /* linee: separator di iOS */
   --linea-12: rgba(60, 60, 67, .12); /* 1px pieno: niente mezzi pixel, che sugli schermi 1x possono sparire */

@@ -32,7 +32,7 @@ function rigaTorta(nome, colore, val, pct, fuori) {
     + '<div class="num torta-pct">' + pct + '</div></div>';
 }
 
-/* come in Casa: il centro e le percentuali sono del portafoglio, le escluse restano in grigio a parte */
+/* il centro e le percentuali sono del portafoglio, le escluse restano in grigio a parte */
 function perCategoria(r, tot) {
   return '<div class="h2 titolo-primo">Dove sono finiti i soldi</div>'
     + '<div class="card torta">'

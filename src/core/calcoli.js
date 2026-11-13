@@ -1,7 +1,7 @@
 /* Totali, riepiloghi e budget. Funzioni pure: ricevono i dati, non leggono lo stato. */
 
 import { COLORE_DEFAULT, COLORE_OLTRE, RUOLO_RIMBORSO } from './costanti.js';
-import { spostaChiaveMese } from './formato.js';
+import { spostaChiaveMese, giorniNelMese } from './formato.js';
 
 export function categorie(dati, tipo) {
   return tipo === 'entrata' ? dati.categorie.entrate : dati.categorie.uscite;
@@ -130,12 +130,17 @@ export function andamentoCategoria(dati, tipo, nome, mese, oggi) {
   };
 }
 
+/* I 3 mesi prima di `mese` ('AAAA-MM'), senza risalire oltre il mese del primo movimento. */
+function mesiPrima(dati, mese) {
+  const primo = dati.movimenti.reduce((min, m) => (m.data.slice(0, 7) < min ? m.data.slice(0, 7) : min), mese);
+  return [-3, -2, -1].map((d) => spostaChiaveMese(mese, d)).filter((k) => k >= primo);
+}
+
 /* Media delle uscite per categoria nei 3 mesi prima di `mese`, senza risalire oltre il mese
    del primo movimento. Arrotondata ai 5 € superiori; 0 per le categorie senza spesa.
    null se prima di `mese` non c'è nessun mese di storico. */
 export function mediaSpesaRecente(dati, mese) {
-  const primo = dati.movimenti.reduce((min, m) => (m.data.slice(0, 7) < min ? m.data.slice(0, 7) : min), mese);
-  const finestra = [-3, -2, -1].map((d) => spostaChiaveMese(mese, d)).filter((k) => k >= primo);
+  const finestra = mesiPrima(dati, mese);
   if (!finestra.length) return null;
   const catTot = uscitePerCategoria(dati.movimenti.filter((m) => finestra.indexOf(m.data.slice(0, 7)) >= 0));
   const valori = {};
@@ -158,4 +163,40 @@ export function scalaAsse(max) {
       }
     }
   }
+}
+
+/* Uscite del portafoglio cumulate giorno per giorno: [fino al giorno 1, fino al 2, …]. */
+export function cumulata(dati, mese) {
+  const ex = escluse(dati, 'uscita'), giorni = new Array(giorniNelMese(mese)).fill(0);
+  delMese(dati.movimenti, mese).forEach((m) => {
+    if (m.tipo === 'uscita' && ex.indexOf(m.categoria) < 0) giorni[parseInt(m.data.slice(8), 10) - 1] += m.importo;
+  });
+  for (let i = 1; i < giorni.length; i++) giorni[i] += giorni[i - 1];
+  return giorni;
+}
+
+function mediana(v) {
+  const s = v.slice().sort((a, b) => a - b), k = s.length >> 1;
+  return s.length % 2 ? s[k] : (s[k - 1] + s[k]) / 2;
+}
+
+/* La spesa "di solito" giorno per giorno: mediana delle cumulate dei 3 mesi prima di `mese`, senza risalire
+   oltre il primo movimento e senza contare il mese in corso `oggi` ('AAAA-MM'), che non è finito. La mediana regge
+   un mese con una spesa straordinaria, la media no. L'ultimo giorno vale il totale del mese, anche quando i mesi
+   hanno lunghezze diverse. null se non c'è nessun mese di storico da usare. */
+export function spesaDiSolito(dati, mese, oggi) {
+  const finestra = mesiPrima(dati, mese).filter((k) => k < oggi);
+  if (!finestra.length) return null;
+  const curve = finestra.map((k) => cumulata(dati, k)), n = giorniNelMese(mese);
+  const giorni = [];
+  for (let i = 0; i < n; i++) giorni.push(mediana(curve.map((c) => c[i === n - 1 ? c.length - 1 : Math.min(i, c.length - 1)])));
+  return { mesi: finestra.length, giorni };
+}
+
+/* Entrate del portafoglio per categoria, dalla più grande: [{ nome, val, colore }]. */
+export function entratePerCategoria(dati, movs) {
+  const ex = escluse(dati, 'entrata'), tot = {};
+  movs.filter((m) => m.tipo === 'entrata' && ex.indexOf(m.categoria) < 0)
+    .forEach((m) => { tot[m.categoria] = (tot[m.categoria] || 0) + m.importo; });
+  return Object.keys(tot).map((n) => ({ nome: n, val: tot[n], colore: colore(dati, n, 'entrata') })).sort((a, b) => b.val - a.val);
 }

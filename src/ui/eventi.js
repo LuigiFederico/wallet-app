@@ -78,7 +78,7 @@ function nascondiBanner() {
 
 /* click nel contenuto: il primo selettore che corrisponde vince */
 const CLICK_CONTENUTO = [
-  ['[data-go]', (el) => vaiA(el.dataset.go)],
+  ['[data-go]', (el) => { if (el.dataset.goVista) S.vista = el.dataset.goVista; vaiA(el.dataset.go); }],
   ['[data-det]', (el) => { S.dettaglio = S.dati.movimenti.find((m) => m.id === el.dataset.det) || null; apriSheet(); }],
   ['[data-filtro]', (el) => { S.filtro = el.dataset.filtro; render(); }],
   // «Modifica budget» è in fondo alla vista Mese: la vista nuova si apre dall'inizio
