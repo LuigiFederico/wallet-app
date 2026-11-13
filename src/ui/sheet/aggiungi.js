@@ -6,7 +6,6 @@ import { categorie, colore } from '../../core/calcoli.js';
 import { bozzaPronta } from '../../core/dati.js';
 import { premi, calcola, haOperazioni, importoDaCalcolo, MAX_IMPORTO } from '../../core/calcolatrice.js';
 
-const ICONA_CHIUDI = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 const ICONA_GIU = '<svg class="pillola-freccia" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true"><path d="M1.5 1.5 6 6l4.5-4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICONA_CALENDARIO = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="2.5" width="11" height="10" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M1.5 6h11M4.5 1v3M9.5 1v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
 
@@ -69,9 +68,9 @@ export function sheetAggiungi() {
   const b = S.bozza;
   const cats = categorie(S.dati, b.tipo).slice().sort((x, y) => x.nome.localeCompare(y.nome, 'it'));
   return '<div class="sheet" id="sheetAdd"><div class="scrim" data-close="1"></div>'
-    + '<div class="panel" role="dialog" aria-labelledby="sheetAddTitolo" tabindex="-1">'
-    + '<div class="sheet-testa"><h2 id="sheetAddTitolo" class="sheet-titolo">' + (b.id ? 'Modifica movimento' : 'Nuovo movimento') + '</h2>'
-    + '<button class="icon-btn" data-close="1" aria-label="Chiudi">' + ICONA_CHIUDI + '</button></div>'
+    + '<div class="panel panel--maniglia" role="dialog" aria-label="' + (b.id ? 'Modifica movimento' : 'Nuovo movimento') + '" tabindex="-1">'
+    // la maniglia: si trascina il pannello verso il basso per chiuderlo (vedi trascinaPerChiudere); toccata, lo chiude
+    + '<button class="maniglia" data-close="1" aria-label="Chiudi"></button>'
     + '<div class="seg">'
     + '<button data-tipo="uscita" data-on="' + (b.tipo === 'uscita' ? 1 : 0) + '">Uscita</button>'
     + '<button data-tipo="entrata" data-on="' + (b.tipo === 'entrata' ? 1 : 0) + '">Entrata</button></div>'

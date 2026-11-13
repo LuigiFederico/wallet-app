@@ -134,6 +134,66 @@ const CLICK_SHEET = [
 
 const TASTI_FISICI = { ',': ',', '.': ',', '+': '+', '-': '−', '*': '×', x: '×', '/': '÷', Backspace: '⌫', Delete: '⌫' };
 
+/* Un pannello con la maniglia si chiude trascinandolo verso il basso, solo col tocco (col mouse ci sono
+   il velo, Esc e la maniglia stessa). Il trascinamento parte dalla parte alta (maniglia, Uscita/Entrata,
+   importo), non dal tastierino o dai campi, così un dito che scivola mentre si scrive non butta la bozza.
+   Sotto un quarto dell'altezza (al massimo 120px) il pannello torna su. */
+const ZONA_TRASCINA = '.maniglia, .seg, .calc-schermo';
+
+function trascinaPerChiudere(sheets) {
+  let g = null; // trascinamento in corso: { panel, x, y, dy, attivo }
+  let bloccaClic = null; // dopo un trascinamento, il clic sullo stesso elemento non conta come tocco
+
+  function muovi(e) {
+    const t = e.touches[0], dx = Math.abs(t.clientX - g.x);
+    g.dy = t.clientY - g.y;
+    if (!g.attivo) {
+      if (Math.abs(g.dy) < 8 && dx < 8) return;
+      // solo in giù e più in verticale che in orizzontale; altrimenti decide il browser
+      if (g.dy < 8 || dx > g.dy) { rilascia(false); return; }
+      g.attivo = true;
+      g.panel.style.animation = 'none'; // l'animazione di entrata altrimenti coprirebbe lo spostamento
+      g.panel.style.transition = 'none';
+    }
+    e.preventDefault();
+    g.panel.style.transform = 'translateY(' + Math.max(0, g.dy) + 'px)';
+  }
+
+  // fine del tocco: chiude se è sceso abbastanza, altrimenti torna su (anche se il tocco è stato annullato)
+  function rilascia(chiudi) {
+    const { panel, attivo, dy } = g;
+    panel.removeEventListener('touchmove', muovi);
+    g = null;
+    if (!attivo) return;
+    panel.style.transition = 'transform .2s ease';
+    if (chiudi && dy > Math.min(120, panel.offsetHeight / 4)) {
+      const bozza = S.bozza;
+      panel.style.transform = 'translateY(100%)';
+      // chiude solo se nel frattempo non è cambiato niente (es. è comparso il pannello del conflitto)
+      setTimeout(() => { if (S.bozza === bozza && !S.conflitto) chiudiSheet(); }, 200);
+    } else panel.style.transform = '';
+  }
+
+  sheets.addEventListener('touchstart', (e) => {
+    if (g) { if (g.attivo) return; rilascia(false); } // un secondo dito non interrompe il trascinamento
+    const panel = e.target.closest('.panel--maniglia');
+    if (!panel || e.touches.length > 1 || panel.scrollTop > 0 || !e.target.closest(ZONA_TRASCINA)) return;
+    g = { panel, x: e.touches[0].clientX, y: e.touches[0].clientY, dy: 0, attivo: false, origine: e.target };
+    // il touchmove che blocca lo scorrimento sta solo su questo pannello e solo durante il tocco
+    panel.addEventListener('touchmove', muovi, { passive: false });
+  }, { passive: true });
+  sheets.addEventListener('touchend', (e) => {
+    if (!g || e.touches.length) return;
+    if (g.attivo) bloccaClic = { el: g.origine, fino: Date.now() + 400 };
+    rilascia(true);
+  });
+  sheets.addEventListener('touchcancel', () => { if (g) rilascia(false); });
+  sheets.addEventListener('click', (e) => {
+    if (bloccaClic && Date.now() < bloccaClic.fino && bloccaClic.el.contains(e.target)) { e.stopPropagation(); e.preventDefault(); }
+    bloccaClic = null;
+  }, true);
+}
+
 function delega(gestori) {
   return (e) => {
     for (const [sel, fn] of gestori) {
@@ -174,6 +234,7 @@ export function collegaEventi() {
 
   const sheets = document.getElementById('sheets');
   sheets.addEventListener('click', delega(CLICK_SHEET));
+  trascinaPerChiudere(sheets);
   // un clic del mouse non lascia il focus su un tasto del tastierino (Spazio e Invio lo ripeterebbero);
   // tocchi e lettori di schermo restano come sono
   let puntatore = '';
