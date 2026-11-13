@@ -5,21 +5,21 @@
 
   /* superfici (systemGroupedBackground di iOS) */
   --carta: #F2F2F7;          /* sfondo app */
-  --carta-scura: rgba(118, 118, 128, .12); /* pulsanti tenui: tertiarySystemFill */
+  --carta-scura: rgba(118, 118, 128, .08); /* pulsanti tenui: testo colorato sopra, contrasto AA anche sui pannelli */
   --bianco: #fff;
 
-  /* testo (label / secondaryLabel / tertiaryLabel) */
+  /* testo: grigi di iOS scuriti quanto basta per il contrasto AA (4,5:1) anche sui fondi grigi */
   --inchiostro: #000;
-  --testo-2: rgba(60, 60, 67, .78);
-  --testo-3: rgba(60, 60, 67, .62);
-  --etichetta: rgba(60, 60, 67, .62);
-  --tab-spento: #8E8E93;
-  --sigla-spenta: #8E8E93;
+  --testo-2: rgba(60, 60, 67, .85);
+  --testo-3: #636368;
+  --etichetta: #636368;
+  --tab-spento: #636368;
+  --sigla-spenta: #636368;
 
   /* accenti: palette di sistema, varianti ad alto contrasto per il testo */
   --accento: #5856D6;        /* systemIndigo, vicino al viola di prima */
-  --verde: #248A3D;
-  --rosso: #D70015;
+  --verde: #1E7B34;
+  --rosso: #C8000F;
   --oro: #A05A00;
   --oro-scuro: #8A4B00;      /* testo bianco sopra: contrasto sufficiente */
   --giallo: #FF9F0A;

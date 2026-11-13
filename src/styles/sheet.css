@@ -142,4 +142,4 @@
 .colore { aspect-ratio: 1; min-height: 40px; border-radius: 50%; }
 .colore[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--carta), 0 0 0 5px var(--accento); }
 .cat-elimina { color: var(--rosso); }
-.cat-conferma:not([disabled]) { background: #FF3B30; color: #fff; }
+.cat-conferma:not([disabled]) { background: var(--rosso); color: #fff; }
