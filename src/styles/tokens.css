@@ -1,10 +1,10 @@
 :root {
   /* San Francisco su iPhone/Mac; Inter come equivalente su Android e Windows */
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, system-ui, sans-serif;
-  --font-serif: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif; /* niente più serif: i numeri grandi usano la stessa famiglia */
 
   /* superfici (systemGroupedBackground di iOS) */
   --carta: #F2F2F7;          /* sfondo app */
+  --riempimento: rgba(118, 118, 128, .12); /* binario di controlli e campi: segmentato, ricerca, pillola, budget */
   --carta-scura: rgba(118, 118, 128, .08); /* pulsanti tenui: testo colorato sopra, contrasto AA anche sui pannelli */
   --bianco: #fff;
 
@@ -23,14 +23,12 @@
   --oro: #A05A00;
   --oro-scuro: #8A4B00;      /* testo bianco sopra: contrasto sufficiente */
   --giallo: #FF9F0A;
-  --grafico-in: #34C759;
-  --grafico-out: #FF3B30;
+  --verde-sistema: #34C759;  /* pallini, interruttori, grafici: mai per il testo */
+  --rosso-sistema: #FF3B30;
+  --grafico-in: var(--verde-sistema);
+  --grafico-out: var(--rosso-sistema);
 
   /* linee: separator di iOS */
-  --linea-06: rgba(60, 60, 67, .12);
-  --linea-08: rgba(60, 60, 67, .14);
-  --linea-09: rgba(60, 60, 67, 0);   /* le card non hanno più bordo */
-  --linea-10: rgba(118, 118, 128, .12);
   --linea-12: rgba(60, 60, 67, .18);
 
   --raggio: 14px;            /* card e liste */

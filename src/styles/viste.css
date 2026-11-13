@@ -33,9 +33,9 @@
 
 .cerca {
   display: flex; align-items: center; gap: 7px; margin-bottom: 12px; padding: 0 10px; min-height: 38px;
-  background: rgba(118, 118, 128, .12); border-radius: 11px;
+  background: var(--riempimento); border-radius: 11px;
 }
-.cerca-input, .cerca-input:focus { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; box-shadow: none; font: 400 17px/1 var(--font); }
+.cerca-input, .cerca-input:focus { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 400 17px/1 var(--font); }
 .risultati { font: 400 13px/1.4 var(--font); color: var(--etichetta); margin: -6px 0 14px; }
 
 .giorni { display: flex; flex-direction: column; gap: 22px; }
@@ -105,7 +105,7 @@
 .grafico-tacca { position: absolute; left: -2px; right: -2px; height: 2px; margin-bottom: -1px; border-radius: 1px; background: var(--inchiostro); }
 .grafico-anno { min-height: 9px; font: 400 9px/1 var(--font); color: var(--etichetta); }
 .grafico-voce > .grafico-tacca-voce { height: 2px; border-radius: 1px; background: var(--inchiostro); }
-.grafico-voce > .grafico-oltre { background: #FF3B30; }
+.grafico-voce > .grafico-oltre { background: var(--rosso-sistema); }
 
 /* ---------- Impostazioni ---------- */
 
@@ -118,8 +118,8 @@
 
 .avviso { margin: 14px 0 12px; border-radius: 11px; text-wrap: pretty; }
 .avviso--ok { display: flex; align-items: center; gap: 8px; padding: 11px 12px; background: rgba(52, 199, 89, .1); font: 400 13px/1.4 var(--font); color: var(--verde); }
-.avviso--ok > i { width: 7px; height: 7px; border-radius: 50%; background: #34C759; flex: none; }
-.avviso--attenzione { padding: 12px; background: rgba(255, 159, 10, .12); font: 400 13px/1.45 var(--font); color: #8A4B00; }
+.avviso--ok > i { width: 7px; height: 7px; border-radius: 50%; background: var(--verde-sistema); flex: none; }
+.avviso--attenzione { padding: 12px; background: rgba(255, 159, 10, .12); font: 400 13px/1.45 var(--font); color: var(--oro-scuro); }
 
 .export-riga { display: flex; gap: 8px; margin-top: 8px; }
 .export-lbl { flex: none; align-self: center; margin-right: 2px; font: 400 13px/1 var(--font); color: var(--testo-2); }
@@ -131,7 +131,6 @@
 .lista-nota { padding: 13px 16px; font: 400 13px/1.45 var(--font); color: var(--etichetta); border-bottom: .5px solid var(--linea-12); }
 
 .switch-stato { flex: none; font: 400 15px/1 var(--font); color: var(--etichetta); }
-.switch-stato.is-on { color: var(--etichetta); }
 .copia-riga .riga-nome { color: var(--accento); }
 .riga-freccia { flex: none; display: flex; color: rgba(60, 60, 67, .3); }
 .copia-riga-info { flex: none; font: 400 15px/1 var(--font); color: var(--etichetta); }
@@ -142,19 +141,19 @@
 .media-azioni .btn-tenue { flex: 1; min-height: 40px; border-radius: 10px; font-size: 15px; }
 .media-azioni .link-btn { flex: none; padding: 0 6px; }
 
-.switch { width: 51px; height: 31px; border-radius: 99px; position: relative; flex: none; background: rgba(120, 120, 128, .16); transition: background .2s; }
-.switch[data-on="1"] { background: #34C759; }
+.switch { width: 51px; height: 31px; border-radius: 99px; position: relative; flex: none; background: rgba(120, 120, 128, .16); }
+.switch[data-on="1"] { background: var(--verde-sistema); }
 .switch > i {
   position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%;
-  background: #fff; box-shadow: 0 3px 8px rgba(0, 0, 0, .15), 0 3px 1px rgba(0, 0, 0, .06); display: block; transition: left .2s;
+  background: #fff; box-shadow: 0 3px 8px rgba(0, 0, 0, .15), 0 3px 1px rgba(0, 0, 0, .06); display: block;
 }
 .switch[data-on="1"] > i { left: 22px; }
 
-.bud-box { display: flex; align-items: center; gap: 4px; background: rgba(118, 118, 128, .12); border-radius: 8px; padding: 7px 10px; flex: none; }
+.bud-box { display: flex; align-items: center; gap: 4px; background: var(--riempimento); border-radius: 8px; padding: 7px 10px; flex: none; }
 .bud-box > span { font: 400 15px/1 var(--font); color: var(--testo-3); }
 .bud, .bud:focus {
   width: 58px; border: 0; outline: 0; background: transparent; text-align: right;
-  box-shadow: none; font: 400 15px/1 var(--font); font-variant-numeric: tabular-nums;
+  font: 400 15px/1 var(--font); font-variant-numeric: tabular-nums;
 }
 
 .piede { text-align: center; padding: 24px 0 8px; font: 400 12px/1.6 var(--font); color: var(--testo-3); }

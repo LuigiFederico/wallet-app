@@ -7,7 +7,7 @@ body {
 button { font-family: inherit; border: 0; background: none; color: inherit; cursor: pointer; padding: 0; letter-spacing: inherit; }
 button:active { opacity: .55; }
 input, select { font-family: inherit; -webkit-appearance: none; appearance: none; letter-spacing: inherit; }
-input:focus, select:focus { outline: 0; box-shadow: 0 0 0 3px rgba(88, 86, 214, .25); }
+input:focus, select:focus { outline: 2px solid var(--accento); outline-offset: -1px; }
 
 /* utilità */
 .num { font-variant-numeric: tabular-nums; }

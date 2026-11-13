@@ -12,14 +12,14 @@
 /* stato del salvataggio: grigia nel file, gialla solo nel browser, rossa per errori e accesso scaduto */
 .stato-salva {
   display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 30px; padding: 0 11px; border-radius: 99px;
-  background: rgba(118, 118, 128, .12); color: var(--testo-2); font: 500 12px/1 var(--font); white-space: nowrap;
+  background: var(--riempimento); color: var(--testo-2); font: 500 12px/1 var(--font); white-space: nowrap;
 }
-.stato-salva > i { width: 7px; height: 7px; border-radius: 50%; display: block; flex: none; background: #34C759; }
+.stato-salva > i { width: 7px; height: 7px; border-radius: 50%; display: block; flex: none; background: var(--verde-sistema); }
 .stato-salva > span { overflow: hidden; text-overflow: ellipsis; }
 .stato-salva[data-stato="locale"] { background: rgba(255, 159, 10, .15); color: var(--oro-scuro); }
 .stato-salva[data-stato="locale"] > i { background: var(--giallo); }
 .stato-salva[data-stato="errore"] { background: rgba(255, 59, 48, .12); color: var(--rosso); }
-.stato-salva[data-stato="errore"] > i { background: #FF3B30; }
+.stato-salva[data-stato="errore"] > i { background: var(--rosso-sistema); }
 
 .contenuto { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 16px calc(132px + var(--safe-bottom)); }
 .contenuto::-webkit-scrollbar { width: 0; height: 0; }

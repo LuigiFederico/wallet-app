@@ -13,8 +13,6 @@
 #sheets[data-fermo="1"] .panel, #sheets[data-fermo="1"] .scrim { animation: none; }
 
 /* aggiungi / modifica */
-.seg > button[data-tipo="uscita"][data-on="1"] { color: var(--inchiostro); }
-.seg > button[data-tipo="entrata"][data-on="1"] { color: var(--inchiostro); }
 .campi { display: flex; flex-direction: column; gap: 14px; }
 .campo { position: relative; }
 .campo .lbl { display: block; margin: 0 0 6px 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 0; }
@@ -27,7 +25,7 @@
 .importo-box:focus-within { box-shadow: 0 0 0 3px rgba(88, 86, 214, .25); }
 .importo-box > span { font: 400 28px/1 var(--font); color: var(--testo-3); }
 .field--importo, .field--importo:focus {
-  flex: 1; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; box-shadow: none;
+  flex: 1; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent;
   font: 600 32px/1.15 var(--font); letter-spacing: -.02em; color: var(--inchiostro); font-variant-numeric: tabular-nums;
 }
 .lettura-riga { min-height: 16px; margin-top: 7px; }
