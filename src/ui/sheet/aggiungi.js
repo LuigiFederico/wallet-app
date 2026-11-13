@@ -45,11 +45,12 @@ function schermo(b) {
   const conto = /[+−×÷]|,$/.test(c) ? c.replace(/([+−×÷])/g, ' $1 ') : '';
   const errore = isNaN(n) ? 'Non si può dividere per zero'
     : n < 0 || (n === 0 && operazioni) ? eurEsatto(n) + ': deve essere più di zero'
-    : n > MAX_IMPORTO ? 'Importo troppo grande' : '';
+    : n > MAX_IMPORTO && !b.sostituisci ? 'Importo troppo grande' : '';
   if (errore) return '<div class="calc-conto">' + conto + '</div><div class="calc-errore">' + errore + '</div>';
   const totale = eurEsatto(n);
   return '<div class="calc-conto">' + conto + '</div>'
-    + '<div class="calc-totale' + (n === 0 ? ' is-vuoto' : totale.length > 13 ? ' is-lunghissimo' : totale.length > 9 ? ' is-lungo' : '') + '">' + totale + '</div>';
+    + '<div class="calc-totale' + (n === 0 ? ' is-vuoto' : totale.length > 13 ? ' is-lunghissimo' : totale.length > 9 ? ' is-lungo' : '')
+    + (b.sostituisci ? ' is-selezionato' : '') + '">' + totale + '</div>';
 }
 
 function coloreScelto(b) {
@@ -68,7 +69,7 @@ export function sheetAggiungi() {
   const b = S.bozza;
   const cats = categorie(S.dati, b.tipo).slice().sort((x, y) => x.nome.localeCompare(y.nome, 'it'));
   return '<div class="sheet" id="sheetAdd"><div class="scrim" data-close="1"></div>'
-    + '<div class="panel" role="dialog" aria-labelledby="sheetAddTitolo">'
+    + '<div class="panel" role="dialog" aria-labelledby="sheetAddTitolo" tabindex="-1">'
     + '<div class="sheet-testa"><h2 id="sheetAddTitolo" class="sheet-titolo">' + (b.id ? 'Modifica movimento' : 'Nuovo movimento') + '</h2>'
     + '<button class="icon-btn" data-close="1" aria-label="Chiudi">' + ICONA_CHIUDI + '</button></div>'
     + '<div class="seg">'
@@ -85,7 +86,7 @@ export function sheetAggiungi() {
     + '<label class="pillola">' + ICONA_CALENDARIO + '<span id="f-giorno-testo" class="pillola-testo">' + testoGiorno(b) + '</span>' + ICONA_GIU
     + '<input class="pillola-select pillola-data" id="f-data" type="date" aria-label="Data" value="' + b.data + '"></label>'
     + '</div>'
-    + '<input class="field nota" id="f-desc" aria-label="Descrizione (facoltativa)" placeholder="Descrizione (facoltativa)" value="' + esc(b.descrizione) + '">'
+    + '<input class="field field--nota" id="f-desc" aria-label="Descrizione (facoltativa)" placeholder="Descrizione (facoltativa)" value="' + esc(b.descrizione) + '">'
     + '<div class="tastierino" role="group" aria-label="Calcolatrice">'
     + TASTI.map((t) => '<button class="tasto' + ('+−×÷'.includes(t) ? ' tasto--op' : '') + '" data-tasto="' + t + '"'
         + (NOMI_TASTI[t] ? ' aria-label="' + NOMI_TASTI[t] + '"' : '') + '>' + (t === '⌫' ? ICONA_CANCELLA : t) + '</button>').join('')
@@ -97,10 +98,13 @@ export function sheetAggiungi() {
     + '</div>' + FARFALLA + '</div>';
 }
 
-/* Un tasto della calcolatrice (anche dalla tastiera fisica): aggiorna il calcolo e l'importo della bozza. */
+/* Un tasto della calcolatrice (anche dalla tastiera fisica): aggiorna il calcolo e l'importo della bozza.
+   Appena aperta una modifica, una cifra o la virgola ricominciano da capo invece di accodarsi all'importo salvato. */
 export function premiTasto(tasto) {
   const b = S.bozza;
-  b.calcolo = tasto === 'C' ? '' : premi(b.calcolo, tasto);
+  const base = b.sostituisci && /^[\d,]$/.test(tasto) ? '' : b.calcolo;
+  b.sostituisci = false;
+  b.calcolo = tasto === 'C' ? '' : premi(base, tasto);
   b.importo = importoDaCalcolo(b.calcolo);
   aggiornaForm();
 }

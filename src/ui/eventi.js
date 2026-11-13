@@ -18,15 +18,23 @@ import { aggiornaCategoria } from './sheet/categoria.js';
 
 function vaiA(tab) { S.tab = tab; render(); }
 
+/* Il focus va sul pannello all'apertura: lascia il + (Invio e Spazio lo ripremerebbero, azzerando la bozza). */
+function focusPannello() {
+  const p = document.querySelector('#sheetAdd .panel');
+  if (p) p.focus({ preventScroll: true });
+}
+
 function apriAggiungi() {
   S.bozza = { tipo: 'uscita', data: oggiISO(), importo: '', calcolo: '', categoria: '', descrizione: '' };
   apriSheet();
+  focusPannello();
 }
 
 function apriModifica() {
   S.bozza = bozzaDaMovimento(S.dettaglio);
   S.dettaglio = null;
   renderSheets();
+  focusPannello();
 }
 
 function salvaBozza() {
@@ -100,8 +108,17 @@ const CLICK_CONTENUTO = [
 
 const CLICK_SHEET = [
   ['[data-close]', chiudiSheet],
-  ['[data-tipo]', (el) => { S.bozza.tipo = el.dataset.tipo; S.bozza.categoria = ''; renderSheets(); }],
-  ['[data-tasto]', (el) => premiTasto(el.dataset.tasto)],
+  // il ridisegno cancella il pulsante: da tastiera (detail 0) il focus torna sullo stesso tipo, col mouse sul pannello
+  ['[data-tipo]', (el, e) => {
+    S.bozza.tipo = el.dataset.tipo; S.bozza.categoria = ''; renderSheets();
+    if (e.detail) focusPannello(); else document.querySelector('[data-tipo="' + S.bozza.tipo + '"]').focus();
+  }],
+  ['[data-tasto]', (el) => {
+    // un tasto chiude la tastiera del telefono aperta sulla descrizione
+    if (document.activeElement && document.activeElement.id === 'f-desc') document.activeElement.blur();
+    premiTasto(el.dataset.tasto);
+    if (el.dataset.tasto === 'C') focusPannello(); // il pulsante si nasconde: il focus non deve cadere sulla pagina
+  }],
   ['#salvaMov', salvaBozza],
   ['#detRimb', () => toggleRimborso(S.dettaglio.id)],
   ['#detMod', apriModifica],
@@ -115,13 +132,13 @@ const CLICK_SHEET = [
   ['#confElimina', confermaElimina]
 ];
 
-const TASTI_FISICI = { ',': ',', '.': ',', '+': '+', '-': '−', '*': '×', x: '×', '/': '÷', Backspace: '⌫', Delete: 'C' };
+const TASTI_FISICI = { ',': ',', '.': ',', '+': '+', '-': '−', '*': '×', x: '×', '/': '÷', Backspace: '⌫', Delete: '⌫' };
 
 function delega(gestori) {
   return (e) => {
     for (const [sel, fn] of gestori) {
       const el = e.target.closest(sel);
-      if (el) { fn(el); return; }
+      if (el) { fn(el, e); return; }
     }
   };
 }
@@ -157,8 +174,11 @@ export function collegaEventi() {
 
   const sheets = document.getElementById('sheets');
   sheets.addEventListener('click', delega(CLICK_SHEET));
-  // un clic del mouse sul tastierino non gli lascia il focus: Spazio e Invio non ripetono l'ultimo tasto
-  sheets.addEventListener('mousedown', (e) => { if (e.target.closest('[data-tasto]')) e.preventDefault(); });
+  // un clic del mouse non lascia il focus su un tasto del tastierino (Spazio e Invio lo ripeterebbero);
+  // tocchi e lettori di schermo restano come sono
+  let puntatore = '';
+  sheets.addEventListener('pointerdown', (e) => { puntatore = e.pointerType; });
+  sheets.addEventListener('mousedown', (e) => { if (puntatore === 'mouse' && e.target.closest('[data-tasto]')) e.preventDefault(); });
   sheets.addEventListener('input', (e) => {
     if (S.categoria && e.target.id === 'c-nome') { S.categoria.nome = e.target.value; aggiornaCategoria(); }
     if (!S.bozza) return;
@@ -187,8 +207,9 @@ export function collegaEventi() {
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && (S.bozza || S.dettaglio || S.conflitto || S.categoria)) { chiudiSheet(); return; }
-    // con il form aperto la tastiera fisica scrive nella calcolatrice, tranne quando si è in un campo
-    if (!document.getElementById('sheetAdd') || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+    // con il form aperto la tastiera fisica scrive nella calcolatrice, anche dopo aver scelto data o categoria;
+    // solo la descrizione tiene per sé quello che si scrive
+    if (!document.getElementById('sheetAdd') || e.ctrlKey || e.metaKey || e.altKey || e.target.id === 'f-desc') return;
     const tasto = TASTI_FISICI[e.key] || (/^\d$/.test(e.key) ? e.key : '');
     if (tasto) { e.preventDefault(); premiTasto(tasto); }
     else if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') { e.preventDefault(); salvaBozza(); }
