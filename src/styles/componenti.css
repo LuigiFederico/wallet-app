@@ -1,6 +1,6 @@
 /* Elementi riusati in più viste. */
 
-.card { background: var(--bianco); border-radius: var(--raggio); }
+.card { background: var(--bianco); border-radius: var(--raggio); box-shadow: var(--ombra-card); }
 .lista { overflow: hidden; }
 
 /* tipografia: etichette in minuscolo grigio, titoli di sezione come su iOS */
@@ -67,7 +67,7 @@
 .donut--lg .donut-val { font-size: 28px; margin-top: 4px; }
 
 /* budget */
-.budget-lista { display: flex; flex-direction: column; gap: 14px; background: var(--bianco); border-radius: var(--raggio); padding: 16px; }
+.budget-lista { display: flex; flex-direction: column; gap: 14px; background: var(--bianco); border-radius: var(--raggio); padding: 16px; box-shadow: var(--ombra-card); }
 .budget-lista--larga { gap: 16px; }
 .budget-testa { display: flex; align-items: baseline; gap: 8px; margin-bottom: 7px; }
 .budget-nome { flex: 1; min-width: 0; font: 400 15px/1.2 var(--font); }
