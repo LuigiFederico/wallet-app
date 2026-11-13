@@ -27,7 +27,7 @@
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
   height: calc(82px + var(--safe-bottom)); padding: 6px 12px var(--safe-bottom);
-  background: rgba(249, 249, 249, .8); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
+  background: #F9F9F9;
   box-shadow: 0 -.5px 0 rgba(0, 0, 0, .18);
   display: flex; align-items: flex-start;
 }
