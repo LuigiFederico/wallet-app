@@ -65,7 +65,9 @@ test('movimentoDaBozza arrotonda, usa la categoria come descrizione e segna i ri
 
 test('bozzaDaMovimento riporta il movimento nel form', () => {
   const m = { id: 'm1', tipo: 'uscita', data: '2026-09-18', importo: 42.5, categoria: 'Svago', descrizione: 'Cinema' };
-  assert.deepEqual(bozzaDaMovimento(m), { id: 'm1', tipo: 'uscita', data: '2026-09-18', importo: '42,5', categoria: 'Svago', descrizione: 'Cinema' });
+  assert.deepEqual(bozzaDaMovimento(m), { id: 'm1', tipo: 'uscita', data: '2026-09-18', importo: '42,5', calcolo: '42,50', categoria: 'Svago', descrizione: 'Cinema' });
+  // un importo con rumore binario (es. da Excel) entra nella calcolatrice già arrotondato
+  assert.equal(bozzaDaMovimento({ ...m, importo: 12.300000000000001 }).calcolo, '12,30');
   // la descrizione di default (= categoria) torna vuota, così resta facoltativa
   assert.equal(bozzaDaMovimento({ ...m, descrizione: 'Svago' }).descrizione, '');
   assert.equal(bozzaPronta(bozzaDaMovimento(m)), true);

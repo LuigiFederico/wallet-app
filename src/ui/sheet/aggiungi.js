@@ -4,10 +4,10 @@ import { S } from '../../state.js';
 import { esc, eurEsatto, oggiISO, ieriISO, dataBreve, parseImporto } from '../../core/formato.js';
 import { categorie, colore } from '../../core/calcoli.js';
 import { bozzaPronta } from '../../core/dati.js';
+import { premi, calcola, haOperazioni, importoDaCalcolo, MAX_IMPORTO } from '../../core/calcolatrice.js';
 
 const ICONA_CHIUDI = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-const ICONA_OK = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.3 5.6 10.2 11.5 3.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const ICONA_GIU = '<svg class="select-freccia" width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1.5 1.5 6 6l4.5-4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICONA_GIU = '<svg class="pillola-freccia" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true"><path d="M1.5 1.5 6 6l4.5-4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICONA_CALENDARIO = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="2.5" width="11" height="10" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M1.5 6h11M4.5 1v3M9.5 1v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
 
 /* la farfalla che esce dal portafoglio quando si salva un'uscita */
@@ -19,43 +19,49 @@ const FARFALLA = '<svg class="farfalla" viewBox="0 0 44 36" fill="none" aria-hid
   + '<rect x="20.6" y="11" width="2.8" height="18" rx="1.4" fill="#16130F"/>'
   + '<path d="M21.3 11.5C20.5 8 19 6 17.5 5M22.7 11.5C23.5 8 25 6 26.5 5" stroke="#16130F" stroke-width="1.1" stroke-linecap="round"/></svg>';
 
+const ICONA_CANCELLA = '<svg width="24" height="18" viewBox="0 0 24 18" fill="none" aria-hidden="true"><path d="M7.6 1.5h12.4a2.5 2.5 0 0 1 2.5 2.5v10a2.5 2.5 0 0 1-2.5 2.5H7.6a1.5 1.5 0 0 1-1.1-.5L1.5 9l5-6.5a1.5 1.5 0 0 1 1.1-1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m11 6 6 6m0-6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+const ICONA_AZZERA = '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="9" fill="currentColor"/><path d="m6 6 6 6m0-6-6 6" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>';
+
+const TASTI = ['7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '−', ',', '0', '⌫', '+'];
+const NOMI_TASTI = { '÷': 'diviso', '×': 'per', '−': 'meno', '+': 'più', '⌫': 'Cancella', ',': 'virgola' };
+
 function importo(b) {
   const n = parseImporto(b.importo);
   return n > 0 ? n : 0;
 }
 
 function testoCta(b) {
-  if (!b.categoria) return 'Scegli una categoria';
   if (!importo(b)) return 'Inserisci l\'importo';
+  if (!b.categoria) return 'Scegli una categoria';
   return (b.id ? 'Salva modifiche' : 'Salva ' + b.tipo) + ' · ' + eurEsatto(importo(b));
 }
 
-/* come è stato letto l'importo: un separatore sbagliato si vede prima di salvare */
-function lettura(b) {
-  if (String(b.importo).trim() === '') return '';
-  return importo(b)
-    ? '<span class="lettura">' + ICONA_OK + 'Letto come ' + eurEsatto(importo(b)) + '</span>'
-    : '<span class="lettura is-errore">Importo non valido: scrivi per esempio 12,50</span>';
+/* lo schermo della calcolatrice: il conto in piccolo sopra (con un operatore o una virgola in sospeso),
+   il risultato in grande, sempre come importo in euro */
+function schermo(b) {
+  const c = b.calcolo;
+  if (!c) return '<div class="calc-conto"></div><div class="calc-totale is-vuoto">0 €</div>';
+  const n = calcola(c), operazioni = haOperazioni(c);
+  const conto = /[+−×÷]|,$/.test(c) ? c.replace(/([+−×÷])/g, ' $1 ') : '';
+  const errore = isNaN(n) ? 'Non si può dividere per zero'
+    : n < 0 || (n === 0 && operazioni) ? eurEsatto(n) + ': deve essere più di zero'
+    : n > MAX_IMPORTO ? 'Importo troppo grande' : '';
+  if (errore) return '<div class="calc-conto">' + conto + '</div><div class="calc-errore">' + errore + '</div>';
+  const totale = eurEsatto(n);
+  return '<div class="calc-conto">' + conto + '</div>'
+    + '<div class="calc-totale' + (n === 0 ? ' is-vuoto' : totale.length > 13 ? ' is-lunghissimo' : totale.length > 9 ? ' is-lungo' : '') + '">' + totale + '</div>';
 }
 
 function coloreScelto(b) {
   return b.categoria ? colore(S.dati, b.categoria, b.tipo) : 'transparent';
 }
 
-function chip(giorno, on, testo) {
-  return '<button class="chip chip--data" data-giorno="' + giorno + '" data-on="' + (on ? 1 : 0) + '" aria-pressed="' + on + '">' + testo + '</button>';
-}
-
-function chipGiorni(b) {
-  const oggi = oggiISO(), ieri = ieriISO(), altra = b.data !== oggi && b.data !== ieri;
-  const anno = b.data.slice(0, 4) !== oggi.slice(0, 4) ? ' ' + b.data.slice(0, 4) : '';
-  return chip('oggi', b.data === oggi, 'Oggi · ' + dataBreve(oggi))
-    + chip('ieri', b.data === ieri, 'Ieri')
-    + chip('altra', altra, ICONA_CALENDARIO + (altra ? dataBreve(b.data) + anno : 'Altra data'));
-}
-
-function campo(etichetta, id, input) {
-  return '<div class="campo"><label class="lbl" for="' + id + '">' + etichetta + '</label>' + input + '</div>';
+/* 'Oggi · 13 nov', 'Ieri · 12 nov', '5 nov' (con l'anno se non è quello in corso) */
+function testoGiorno(b) {
+  const oggi = oggiISO(), giorno = dataBreve(b.data);
+  if (b.data === oggi) return 'Oggi · ' + giorno;
+  if (b.data === ieriISO()) return 'Ieri · ' + giorno;
+  return giorno + (b.data.slice(0, 4) !== oggi.slice(0, 4) ? ' ' + b.data.slice(0, 4) : '');
 }
 
 export function sheetAggiungi() {
@@ -68,17 +74,21 @@ export function sheetAggiungi() {
     + '<div class="seg">'
     + '<button data-tipo="uscita" data-on="' + (b.tipo === 'uscita' ? 1 : 0) + '">Uscita</button>'
     + '<button data-tipo="entrata" data-on="' + (b.tipo === 'entrata' ? 1 : 0) + '">Entrata</button></div>'
-    + '<div class="campi">'
-    + campo('Importo', 'f-imp', '<div class="importo-box"><span>€</span>'
-        + '<input class="field--importo num" id="f-imp" inputmode="decimal" autocomplete="off" placeholder="0,00" value="' + esc(b.importo) + '"></div>'
-        + '<div id="f-lettura" class="lettura-riga">' + lettura(b) + '</div>')
-    + campo('Categoria', 'f-cat', '<div class="select-box"><i id="f-cat-dot" class="dot select-dot" style="background:' + coloreScelto(b) + '"></i>'
-        + '<select class="field field--select" id="f-cat"><option value="">Scegli…</option>'
-        + cats.map((c) => '<option value="' + esc(c.nome) + '"' + (b.categoria === c.nome ? ' selected' : '') + '>' + esc(c.nome) + '</option>').join('')
-        + '</select>' + ICONA_GIU + '</div>')
-    + '<div class="campo"><div class="lbl">Data</div><div class="chips chips--data" id="f-giorni">' + chipGiorni(b) + '</div>'
-    + '<input class="field data-nascosta" id="f-data" type="date" tabindex="-1" aria-label="Altra data" value="' + b.data + '"></div>'
-    + campo('Descrizione <span class="lbl-nota">(facoltativa)</span>', 'f-desc', '<input class="field field--testo" id="f-desc" placeholder="Es. Esselunga" value="' + esc(b.descrizione) + '">')
+    + '<div class="calc-schermo"><div id="f-schermo" class="calc-righe" role="status">' + schermo(b) + '</div>'
+    + '<button class="calc-azzera" data-tasto="C" aria-label="Cancella tutto"' + (b.calcolo ? '' : ' hidden') + '>' + ICONA_AZZERA + '</button></div>'
+    + '<div class="pillole">'
+    + '<label class="pillola"><i id="f-cat-dot" class="dot" style="background:' + coloreScelto(b) + '"></i>'
+    + '<span id="f-cat-testo" class="pillola-testo">' + (b.categoria ? esc(b.categoria) : 'Categoria') + '</span>' + ICONA_GIU
+    + '<select class="pillola-select" id="f-cat" aria-label="Categoria"><option value="">Scegli…</option>'
+    + cats.map((c) => '<option value="' + esc(c.nome) + '"' + (b.categoria === c.nome ? ' selected' : '') + '>' + esc(c.nome) + '</option>').join('')
+    + '</select></label>'
+    + '<label class="pillola">' + ICONA_CALENDARIO + '<span id="f-giorno-testo" class="pillola-testo">' + testoGiorno(b) + '</span>' + ICONA_GIU
+    + '<input class="pillola-select pillola-data" id="f-data" type="date" aria-label="Data" value="' + b.data + '"></label>'
+    + '</div>'
+    + '<input class="field nota" id="f-desc" aria-label="Descrizione (facoltativa)" placeholder="Descrizione (facoltativa)" value="' + esc(b.descrizione) + '">'
+    + '<div class="tastierino" role="group" aria-label="Calcolatrice">'
+    + TASTI.map((t) => '<button class="tasto' + ('+−×÷'.includes(t) ? ' tasto--op' : '') + '" data-tasto="' + t + '"'
+        + (NOMI_TASTI[t] ? ' aria-label="' + NOMI_TASTI[t] + '"' : '') + '>' + (t === '⌫' ? ICONA_CANCELLA : t) + '</button>').join('')
     + '</div>'
     + '<button id="salvaMov" class="cta cta--salva"' + (bozzaPronta(b) ? '' : ' disabled') + '>'
     + '<span class="salva-tasca" aria-hidden="true"></span>'
@@ -87,15 +97,25 @@ export function sheetAggiungi() {
     + '</div>' + FARFALLA + '</div>';
 }
 
-/* Aggiorna pulsante, lettura dell'importo, pallino e date senza ridisegnare il form mentre si scrive. */
+/* Un tasto della calcolatrice (anche dalla tastiera fisica): aggiorna il calcolo e l'importo della bozza. */
+export function premiTasto(tasto) {
+  const b = S.bozza;
+  b.calcolo = tasto === 'C' ? '' : premi(b.calcolo, tasto);
+  b.importo = importoDaCalcolo(b.calcolo);
+  aggiornaForm();
+}
+
+/* Aggiorna schermo, pulsante, pallino e data senza ridisegnare il form mentre si scrive. */
 export function aggiornaForm() {
   const b = S.bozza, btn = document.getElementById('salvaMov');
   if (!btn || !b) return;
   btn.disabled = !bozzaPronta(b);
   btn.querySelector('.salva-testo').textContent = testoCta(b);
-  document.getElementById('f-lettura').innerHTML = lettura(b);
+  document.getElementById('f-schermo').innerHTML = schermo(b);
+  document.querySelector('.calc-azzera').hidden = !b.calcolo;
   document.getElementById('f-cat-dot').style.background = coloreScelto(b);
-  document.getElementById('f-giorni').innerHTML = chipGiorni(b);
+  document.getElementById('f-cat-testo').textContent = b.categoria || 'Categoria';
+  document.getElementById('f-giorno-testo').textContent = testoGiorno(b);
 }
 
 /* Salvataggio di un'uscita: il pulsante diventa un portafoglio, ne esce una farfalla e il pannello scende.

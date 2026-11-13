@@ -3,6 +3,7 @@
 import { CAT_USCITE, CAT_ENTRATE, BUONI_PASTO, DA_RIMBORSARE, INVESTIMENTI, FILENAME, RUOLI_PREDEFINITI, RUOLO_RIMBORSO } from './costanti.js';
 import { oggiISO, parseImporto } from './formato.js';
 import { categorie, haRuolo } from './calcoli.js';
+import { importoDaCalcolo } from './calcolatrice.js';
 
 function categoria(nome, colore) {
   return RUOLI_PREDEFINITI[nome] ? { nome, colore, ruolo: RUOLI_PREDEFINITI[nome] } : { nome, colore };
@@ -59,6 +60,7 @@ export function bozzaPronta(b) {
 export function bozzaDaMovimento(m) {
   return {
     id: m.id, tipo: m.tipo, data: m.data, importo: String(m.importo).replace('.', ','),
+    calcolo: importoDaCalcolo(String(m.importo).replace('.', ',')), // la calcolatrice riparte dall'importo salvato
     categoria: m.categoria, descrizione: m.descrizione === m.categoria ? '' : (m.descrizione || '')
   };
 }

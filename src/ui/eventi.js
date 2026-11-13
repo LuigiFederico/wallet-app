@@ -2,7 +2,7 @@
 
 import { S } from '../state.js';
 import { LS_BANNER } from '../core/costanti.js';
-import { oggiISO, ieriISO } from '../core/formato.js';
+import { oggiISO } from '../core/formato.js';
 import { PALETTE } from '../core/costanti.js';
 import { bozzaPronta, movimentoDaBozza, bozzaDaMovimento, usoCategoria } from '../core/dati.js';
 import { categorie, colore } from '../core/calcoli.js';
@@ -13,28 +13,20 @@ import {
 import { scegliCartella, riattivaAccesso, confermaVersione } from '../persistenza.js';
 import { exportJson, exportCsv, exportXlsx } from '../export/index.js';
 import { render, renderSheets, apriSheet, chiudiSheet } from './render.js';
-import { aggiornaForm, animaSalvataggio } from './sheet/aggiungi.js';
+import { aggiornaForm, animaSalvataggio, premiTasto } from './sheet/aggiungi.js';
 import { aggiornaCategoria } from './sheet/categoria.js';
 
 function vaiA(tab) { S.tab = tab; render(); }
 
-/* il form si apre con il cursore nell'importo, così la tastiera numerica è già pronta */
-function focusImporto() {
-  const f = document.getElementById('f-imp');
-  if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); }
-}
-
 function apriAggiungi() {
-  S.bozza = { tipo: 'uscita', data: oggiISO(), importo: '', categoria: '', descrizione: '' };
+  S.bozza = { tipo: 'uscita', data: oggiISO(), importo: '', calcolo: '', categoria: '', descrizione: '' };
   apriSheet();
-  focusImporto();
 }
 
 function apriModifica() {
   S.bozza = bozzaDaMovimento(S.dettaglio);
   S.dettaglio = null;
   renderSheets();
-  focusImporto();
 }
 
 function salvaBozza() {
@@ -44,16 +36,6 @@ function salvaBozza() {
   const ritardo = b.tipo === 'uscita' ? animaSalvataggio() : 0;
   chiudiSheet();
   if (b.id) modifica(b, ritardo); else aggiungi(movimentoDaBozza(S.dati, b), ritardo);
-}
-
-function scegliGiorno(giorno) {
-  if (giorno === 'altra') {
-    const inp = document.getElementById('f-data');
-    try { inp.showPicker(); } catch (e) { inp.classList.add('is-visibile'); inp.focus(); }
-    return;
-  }
-  S.bozza.data = giorno === 'ieri' ? ieriISO() : oggiISO();
-  aggiornaForm();
 }
 
 /* nome = null: categoria nuova, con il primo colore della tavolozza non ancora usato in quel tipo */
@@ -119,7 +101,7 @@ const CLICK_CONTENUTO = [
 const CLICK_SHEET = [
   ['[data-close]', chiudiSheet],
   ['[data-tipo]', (el) => { S.bozza.tipo = el.dataset.tipo; S.bozza.categoria = ''; renderSheets(); }],
-  ['[data-giorno]', (el) => scegliGiorno(el.dataset.giorno)],
+  ['[data-tasto]', (el) => premiTasto(el.dataset.tasto)],
   ['#salvaMov', salvaBozza],
   ['#detRimb', () => toggleRimborso(S.dettaglio.id)],
   ['#detMod', apriModifica],
@@ -132,6 +114,8 @@ const CLICK_SHEET = [
   ['#annullaElimina', () => { S.categoria.eliminando = false; S.categoria.destinazione = ''; renderSheets(); }],
   ['#confElimina', confermaElimina]
 ];
+
+const TASTI_FISICI = { ',': ',', '.': ',', '+': '+', '-': '−', '*': '×', x: '×', '/': '÷', Backspace: '⌫', Delete: 'C' };
 
 function delega(gestori) {
   return (e) => {
@@ -173,13 +157,14 @@ export function collegaEventi() {
 
   const sheets = document.getElementById('sheets');
   sheets.addEventListener('click', delega(CLICK_SHEET));
+  // un clic del mouse sul tastierino non gli lascia il focus: Spazio e Invio non ripetono l'ultimo tasto
+  sheets.addEventListener('mousedown', (e) => { if (e.target.closest('[data-tasto]')) e.preventDefault(); });
   sheets.addEventListener('input', (e) => {
     if (S.categoria && e.target.id === 'c-nome') { S.categoria.nome = e.target.value; aggiornaCategoria(); }
     if (!S.bozza) return;
     if (e.target.id === 'f-data' && e.target.value) S.bozza.data = e.target.value;
-    if (e.target.id === 'f-imp') S.bozza.importo = e.target.value;
     if (e.target.id === 'f-desc') S.bozza.descrizione = e.target.value;
-    if (e.target.id === 'f-imp' || e.target.id === 'f-data') aggiornaForm();
+    if (e.target.id === 'f-data') aggiornaForm();
   });
   sheets.addEventListener('change', (e) => {
     if (S.bozza && e.target.id === 'f-cat') { S.bozza.categoria = e.target.value; aggiornaForm(); }
@@ -201,6 +186,11 @@ export function collegaEventi() {
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && (S.bozza || S.dettaglio || S.conflitto || S.categoria)) chiudiSheet();
+    if (e.key === 'Escape' && (S.bozza || S.dettaglio || S.conflitto || S.categoria)) { chiudiSheet(); return; }
+    // con il form aperto la tastiera fisica scrive nella calcolatrice, tranne quando si è in un campo
+    if (!document.getElementById('sheetAdd') || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+    const tasto = TASTI_FISICI[e.key] || (/^\d$/.test(e.key) ? e.key : '');
+    if (tasto) { e.preventDefault(); premiTasto(tasto); }
+    else if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') { e.preventDefault(); salvaBozza(); }
   });
 }
